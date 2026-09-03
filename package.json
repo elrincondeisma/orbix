@@ -1,0 +1,32 @@
+{
+  "name": "miniclaudio",
+  "productName": "miniClaudio",
+  "version": "0.1.0",
+  "description": "Mascota de escritorio que vigila Claude Code y lleva las cuentas",
+  "private": true,
+  "type": "module",
+  "main": "./out/main/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "dist": "npm run build && electron-builder --mac --arm64",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.0.0",
+    "chokidar": "^4.0.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0",
+    "electron-vite": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0"
+  }
+}
