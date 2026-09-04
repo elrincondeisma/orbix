@@ -27,13 +27,18 @@ asarUnpack:
   - "**/*.node"
   - "scripts/hook/**"
 
+afterPack: scripts/after-pack.cjs
+
 mac:
   category: public.app-category.developer-tools
   target:
     - target: dmg
       arch: [arm64]
   icon: resources/icon.icns
-  # Sin firmar ni notarizar (ver punto abierto A1 más arriba).
+  # Sin firmar con Developer ID ni notarizado (ver punto abierto A1 más arriba). Pero
+  # SÍ hace falta una firma ad-hoc consistente sobre el .app completo — ver
+  # `scripts/after-pack.cjs`: sin ella, bajo cuarentena real, macOS no avisa y sigue,
+  # borra la app entera al primer arranque (descubierto empaquetando el release v0.1.0).
   identity: null
   extendInfo:
     LSUIElement: 1

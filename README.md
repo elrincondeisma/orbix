@@ -33,6 +33,8 @@ Descarga la última versión desde [Releases](../../releases). Orbix **no está 
 
 Al abrir Orbix por primera vez verás la mascota y el icono en la barra de menús, contando ya tu histórico de tokens (Orbix lee los transcripts que Claude Code guarda en `~/.claude/projects`). Para que también **reaccione** a lo que Claude Code hace en tiempo real, abre **Preferencias → Integración** e instala los hooks — Orbix te explica exactamente qué va a modificar antes de tocar nada, y hace una copia de seguridad de tu configuración.
 
+Guía completa, con capturas de cada pantalla: **[Manual de usuario](docs/manual/MANUAL.md)**.
+
 ## Privacidad
 
 - Todo vive en tu Mac: una base de datos SQLite local (`~/Library/Application Support/Orbix`) y nada más. Sin servidor, sin telemetría, sin analítica.
