@@ -45,9 +45,11 @@ bloque del stream. El valor bueno es el máximo.
    correcto: es la **clave de idempotencia de la ingesta de líneas** (tabla `usage_lines`),
    no la clave de agregación de coste. Así también seguimos deduplicando las líneas que las
    sesiones reanudadas o bifurcadas reescriben (el 42 % medido).
-3. **Las cifras de referencia del plan** ($166,74 hoy · $616,83 en 7 días · $1 178,15 en
-   30 días) son **sumas a nivel de línea**, y por tanto un techo inflado. Sirven como
-   *test de calibración del parser* (§8), no como valor esperado del coste.
+3. ~~**Las cifras de referencia del plan** ($166,74 hoy · $616,83 en 7 días · $1 178,15 en
+   30 días) son sumas a nivel de línea, y por tanto un techo inflado.~~ **CADUCADO:** esas
+   cifras además se calcularon sin los transcripts de subagentes, que son el 63 % del
+   consumo. No sirven ni como techo. Las cifras oficiales, medidas ejecutando el ingestor,
+   están en §8. El ratio real línea/petición es **1,91**.
 
 ---
 
@@ -257,6 +259,54 @@ CREATE INDEX idx_limits_captured ON limits_snapshots(captured_at DESC);
 **Nota sobre `UNIQUE (source, fetched_at_ms)`:** en SQLite los `NULL` se consideran
 distintos, así que las capturas `live` (que no tienen `fetched_at_ms`) nunca chocan. Para
 `cache`, evita insertar 300 veces al día el mismo bloque rancio de hace 7 días.
+
+### 2.0.1 Tabla añadida en la implementación: `snapshot_rollups` (migración `003`)
+
+> Añadida el 2026-09-03 al implementar. No estaba en el diseño original.
+
+Claude Code borra los transcripts a los 30 días, así que el histórico vivo es incompleto:
+de un mes solo sobrevivían ~10 días. `data/snapshot-*.json`
+(`schema: miniclaudio.snapshot/2`) trae rollups por día/proyecto/modelo ya a grano de
+petición e incluyendo subagentes, **sin coste** (los precios se aplican al importar).
+
+```sql
+CREATE TABLE snapshot_rollups (
+  day_local      TEXT NOT NULL,
+  project_key    TEXT NOT NULL,
+  model_key      TEXT NOT NULL,
+  project_path   TEXT,                        -- ruta original del snapshot (cwd)
+  model_raw      TEXT,
+  requests       INTEGER NOT NULL DEFAULT 0,  -- 'messages' del snapshot
+  input_tok      INTEGER NOT NULL DEFAULT 0,
+  output_tok     INTEGER NOT NULL DEFAULT 0,
+  thinking_tok   INTEGER NOT NULL DEFAULT 0,
+  cache_write_5m INTEGER NOT NULL DEFAULT 0,
+  cache_write_1h INTEGER NOT NULL DEFAULT 0,
+  cache_read     INTEGER NOT NULL DEFAULT 0,
+  source_file    TEXT NOT NULL,
+  generated_at   TEXT,
+  imported_at    TEXT NOT NULL,
+  PRIMARY KEY (day_local, project_key, model_key)
+) WITHOUT ROWID;
+CREATE INDEX idx_snaproll_day ON snapshot_rollups(day_local);
+```
+
+Vive en su propia tabla y no en otro sitio por dos motivos: en `rollup_daily` la borraría
+el primer recálculo (es una tabla derivada), y en `usage_requests` habría que inventar
+`request_id`, lo que rompería la invariante **I1**. El importador es idempotente
+(`ON CONFLICT` con `MAX()` por contador).
+
+### 2.0.2 Origen de cada rollup (migración `004`)
+
+```sql
+ALTER TABLE rollup_daily ADD COLUMN source TEXT NOT NULL DEFAULT 'live'
+  CHECK (source IN ('live', 'snapshot'));
+```
+
+`source` **no interviene en el cálculo**: está para que el panel de estadísticas marque los
+días rescatados y para poder auditar la cifra (ver §5.6.1). La migración además vacía
+`rollup_daily` y encola todos los días en `rollup_dirty`, para que el histórico ya guardado
+se recalcule solo con la regla nueva sin que nadie tenga que llamar a nada a mano.
 
 ### 2.1 Semilla (`002_seed.sql`, idempotente con `INSERT OR IGNORE`)
 
@@ -500,8 +550,23 @@ line = {
   cache_write_1h: int(u.cache_creation?.ephemeral_1h_input_tokens),
   cache_read:     int(u.cache_read_input_tokens),
 }
-int(x) = Number.isFinite(x) && x >= 0 ? Math.trunc(x) : 0
+int(x) = (Number.isFinite(x) && x >= 0 && x <= MAX_TOKEN_COUNT) ? Math.trunc(x) : 0
+         # MAX_TOKEN_COUNT = 1e9. Ver el techo de cordura más abajo.
 ```
+
+**Techo de cordura (`MAX_TOKEN_COUNT = 1_000_000_000`).** El parser es tolerante, pero la
+tolerancia no puede permitir que una línea corrupta se lleve por delante la cifra principal
+de la app. Un solo `ephemeral_1h_input_tokens: 1e30` metía un coste de 1e25 $ en
+`rollup_daily`, y de forma permanente. Cualquier contador por encima del techo se descarta
+(queda a 0, el resto de la línea se ingiere igual) y se cuenta en
+`ParseWarnings.absurdCounter`, para que quede rastro en vez de desaparecer en silencio.
+
+El umbral sale de los datos: sobre las 24 389 líneas con `usage` de la máquina de
+referencia, el valor más alto de cualquier contador es **997 672** (`cache_read`), y no es
+casualidad —un contador de una petición no puede pasar de la ventana de contexto del
+modelo, hoy 1 M de tokens—. 1e9 deja **1 000×** de margen sobre ambas cifras. Verificado:
+descarta 0 valores sobre el corpus real completo. El mismo techo se aplica al importador de
+`snapshot_rollups`, que tiene idéntico poder de destrucción sobre `rollup_daily`.
 
 Compatibilidad hacia atrás: si `u.cache_creation` no existe pero sí
 `u.cache_creation_input_tokens`, se asigna todo a `cache_write_5m` (es el valor por defecto
@@ -559,6 +624,13 @@ WHERE excluded.input_tok      > usage_requests.input_tok
 Tras el upsert, si la fila quedó `cost_stale = 1` (o es nueva), se recalcula el coste con
 §4.1 y se marca el `day_local` en `rollup_dirty`.
 
+**`day_local` sigue siempre a `ts`.** El `ON CONFLICT` avanza `ts`/`ts_epoch` al bloque más
+tardío, así que una petición a caballo de la medianoche cambia de día cuando llega su
+último bloque. El upsert deja `day_local` como estaba a propósito —así el `RETURNING`
+devuelve el día ANTERIOR— y el ingestor lo mueve después, marcando sucios **los dos** días
+implicados. Sin esto la cifra deja de cuadrar con un escaneo independiente de los
+transcripts (medido: 1 petición de 12 858, $0,38 en el día equivocado).
+
 `day_local` se calcula en JS con
 `Intl.DateTimeFormat('sv-SE', { timeZone: tz }).format(new Date(ts_epoch))` (el locale `sv-SE`
 da `YYYY-MM-DD` sin trucos). Se hace en el ingestor, no en SQL, porque SQLite no sabe de
@@ -604,6 +676,44 @@ recomputeDirtyDays():
 Se ejecuta al final de cada ciclo de ingesta. `rollup_daily` es **siempre derivable**: se
 puede borrar entera y reconstruir con `INSERT INTO rollup_dirty SELECT DISTINCT day_local ...`.
 Existe por eso un comando de mantenimiento `ingest:runNow { full: true }` que hace justo eso.
+
+### 5.6.1 De dónde salen las cifras de un día: el snapshot SOLO rellena huecos
+
+> Decisión de producto del 2026-09-03, tras el rechazo de QA (BUG-2).
+
+`rollup_daily` se alimenta de dos fuentes: `usage_requests` (transcripts vivos) y
+`snapshot_rollups` (el histórico que Claude Code ya borró). La regla, para cada
+`day_local`:
+
+```
+si el día tiene ALGUNA fila en usage_requests  -> mandan los transcripts, y el
+                                                  snapshot de ese día ni se mira
+si no tiene ninguna                            -> se usa el snapshot entero
+```
+
+Es un criterio de **presencia, no de volumen**: las dos fuentes nunca compiten, nunca se
+comparan tokens, nunca gana la que más tenga. La fila resultante lleva
+`source = 'live' | 'snapshot'`.
+
+**Por qué:** el criterio que manda es que la cifra sea **reproducible**. Con esta regla el
+usuario puede escanear él mismo `~/.claude/projects` y obtener exactamente lo que ve en el
+menubar, más los días rescatados que ya no existen en disco. Verificado el 2026-09-03
+contra un escaneo independiente: los 9 días cerrados cuadran **al céntimo y petición a
+petición**; solo el día en curso difiere, y por los segundos que pasan entre la ingesta y
+el escaneo.
+
+**Qué cuesta:** se pierde el rescate parcial de los días mixtos, **$55,30** medidos entre
+el 25 de agosto y el 2 de septiembre (incluidos 364 requests de worktrees ya borrados del
+día 2). Es consumo real que se descarta. Se acepta a conciencia: el principio del diseño es
+*nada de mentiras*, y una cifra más alta que no cuadra con ninguna fuente lo incumple. La
+regla anterior ("gana el día con más tokens") daba 10,23× donde lo reproducible eran 9,96×.
+
+**Por qué tampoco se fusionan clave a clave:** las dos fuentes agrupan por proyectos
+distintos —el ingestor por el directorio bajo `projects/` (§5.1) y el snapshot por el `cwd`
+de cada línea—, así que mezclarlas duplica el consumo de los subagentes que corren en
+worktrees o subdirectorios (medido: +21 % a 30 días).
+
+Los días rescatados se consultan con `rescuedDays(db, from?, to?)`.
 
 ### 5.7 Recálculo cuando cambian los precios
 
@@ -891,26 +1001,42 @@ frontend y backend no puedan divergir.
 
 ### Test de calibración del parser (el importante)
 
-Con los transcripts reales del usuario, **la suma a nivel de línea** (es decir,
-`SELECT SUM(...) FROM usage_lines` con la fórmula de §4.1) debe reproducir **exactamente**
-las cifras del plan:
+> ⚠️ **CIFRAS CADUCADAS.** La tabla que había aquí ($166,74 hoy · $616,83 en 7 días ·
+> $1 178,15 en 30 días) se calculó **sumando a nivel de línea y sin incluir los
+> transcripts de subagentes**. Ya no sirve ni como techo: con el glob recursivo, esa misma
+> suma por línea daría hoy **$3 459,96** a 30 días. No se use para nada.
 
-| Periodo | input | output | cw1h | cache read | coste esperado |
-|---|---|---|---|---|---|
-| Hoy | 586 | 273 977 | 6 857 425 | 182 620 768 | **$166,74** |
-| 7 días | — | 2 961 104 | 15 179 622 | 781 964 839 | **$616,83** |
-| 30 días | — | 5 708 647 | 25 147 921 | 1 567 811 429 | **$1 178,15** |
+**PUNTO ABIERTO B4 — CERRADO** el 2026-09-03 ejecutando el ingestor sobre los transcripts
+reales. Cifras oficiales de referencia (zona `Europe/Madrid`, tarifas de la semilla):
 
-Si el parser reproduce estas cifras a nivel de línea, está leyendo bien el JSONL. **La cifra
-que la app muestra es la de `usage_requests`, que será sensiblemente menor** (dividida
-aproximadamente entre el número medio de bloques por petición). QA debe registrar el ratio
-`SUM(usage_lines) / SUM(usage_requests)` como dato de la corrección del §0; se espera algo
-entre 2,5 y 4.
+| Métrica | Valor medido |
+|---|---|
+| Ficheros `.jsonl` (recursivo, con subagentes) | 207 |
+| Líneas con `usage` leídas | 24 494 |
+| Bloques distintos `(request_id, api_block_index)` | 18 727 |
+| **Peticiones facturables** | **12 858** |
+| **Ratio línea/petición** | **1,91** |
+| Duplicados absorbidos por la dedup | 5 767 (23,5 % de las líneas) |
+| Peticiones de subagente | 63,7 % del total |
+| Backfill completo | ~2,0 s |
+| Ronda completa de consultas del menubar | ~4,5 ms |
 
-> **PUNTO ABIERTO B4 — Cifra correcta de referencia.** No puedo calcularla sin ejecutar
-> código. *Recomendación:* el backend, en cuanto tenga el ingestor, publica en el hilo del
-> equipo las cifras a nivel de petición para hoy/7d/30d y el ratio; esas pasan a ser la
-> referencia oficial y se actualiza el §7 del plan.
+El ratio real es **1,91**, no "entre 2,5 y 4" como se estimaba: la media de bloques por
+petición es menor de lo que sugería la muestra del §0. Dos advertencias sobre cómo se mide,
+porque es fácil equivocarse:
+
+- `COUNT(*) FROM usage_lines` **no** son las líneas leídas, son los bloques *distintos*: la
+  dedup ya ha absorbido los duplicados de las sesiones reanudadas. El ratio del §0 se mide
+  con las líneas leídas del fichero (`IngestRunResult.linesIngested`), no con la tabla.
+- Las cifras de coste dependen de la tarifa por modelo. Aplicando Opus 5 a todo el corpus
+  (que es como se calcularon las referencias antiguas) sale **más alto**: la mezcla real
+  lleva sonnet-5 y haiku-4-5, que cuestan bastante menos.
+
+Las cifras de dinero no se fijan aquí a propósito: cambian cada hora. Lo que sí es
+invariante y debe comprobarse es que **el total de la app coincide con un escaneo
+independiente de `~/.claude/projects`** en todos los días con transcripts vivos (§5.6.1).
+Ese cuadre está automatizado en `tests/integration/real-ingest.test.ts`
+(`MINICLAUDIO_REAL=1 npm test`).
 
 ### Fixtures obligatorios en `tests/fixtures/`
 

@@ -55,10 +55,19 @@ cache_read_input_tokens
 Más `message.model`, `timestamp`, `sessionId`, `cwd` y `requestId`.
 
 Medido sobre los datos reales: **0,45 s** para escanear los 368 MB completos.
+21.023 líneas con `usage` que corresponden a 10.922 peticiones facturables.
 
-**Deduplicación obligatoria.** Las sesiones reanudadas o bifurcadas reescriben líneas: en
-los datos actuales, 3.781 de 8.985 líneas (42 %) son duplicados. Sin dedup el coste sale
-inflado. Clave única: `(request_id, api_block_index)`.
+**Dos granos, no uno.** La unidad facturable es `request_id`: una misma petición se escribe
+en varias líneas, una por bloque de contenido (`thinking`, `text`, `tool_use`…), y todas
+repiten el mismo objeto `usage`. Se agrega con `MAX()` por contador. Verificado: la petición
+`req_011CegDJVd7cPRt2svHYRMeo` ocupa 4 líneas y las 4 dicen `output_tokens: 1388`.
+
+El grano de línea, con clave `UNIQUE(request_id, api_block_index)`, se conserva aparte para
+la idempotencia de la ingesta y para absorber los duplicados de sesiones reanudadas (42 % de
+las líneas).
+
+**El escaneo debe ser recursivo.** Los subagentes escriben en
+`<sesión>/subagents/agent-*.jsonl` y son el 43 % del consumo real.
 
 ### C. Suscripción y límites → `~/.claude.json`
 
@@ -174,16 +183,27 @@ interface PetRenderer {
   reinicio y la antigüedad del dato.
 - **Desglose** — por proyecto y por modelo.
 
-Referencia real medida hoy (Opus 5, tarifas de API, tras deduplicar):
+Referencia real medida (Opus 5, tarifas de API, grano de petición, incluyendo subagentes):
 
 | Periodo | Output | Cache read | Coste equivalente |
 |---|---|---|---|
-| Hoy | 274 K | 183 M | $166,74 |
-| 7 días | 2,96 M | 782 M | $616,83 |
-| 30 días | 5,71 M | 1.568 M | $1.178,15 |
+| Hoy | 1,13 M | 276 M | $236,73 |
+| 7 días | 6,76 M | 1.266 M | $1.016,82 |
+| 30 días | 10,04 M | 2.130 M | $1.649,02 |
 
-Contra los ~$200/mes de la Max 20×, el multiplicador ronda **6×**. Y es un suelo: solo
+Contra los ~$200/mes de la Max 20×, el multiplicador es **8,2×**. Y es un suelo: solo
 sobrevivieron ~10 días de transcripts a la limpieza de 30 días.
+
+> **Corrección del 2026-09-03.** Una primera medición dio $1.178,15 a 30 días. Estaba mal
+> por dos errores que se compensaban en parte:
+> 1. Sumaba a nivel de línea JSONL. Una petición se escribe en varias líneas (una por bloque
+>    de contenido) y **cada línea repite el objeto `usage` entero**: ratio medido 1,92 líneas
+>    por petición. Eso inflaba un 22 %.
+> 2. El glob no era recursivo, así que se dejaba fuera los 97 ficheros de subagentes en
+>    `<sesión>/subagents/agent-*.jsonl`, que son el **43 %** del consumo real.
+>
+> Neto: la cifra se quedaba un 38 % corta. La unidad facturable es `request_id` con `MAX()`
+> por contador, y el escaneo tiene que ser recursivo.
 
 ## 8. Fases
 
