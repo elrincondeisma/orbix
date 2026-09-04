@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:* http://localhost:*"
+    />
+    <title>miniClaudio</title>
+  </head>
+  <body>
+    <header class="mb-head">
+      <span class="mb-dot" id="status-dot" data-severity="unknown" aria-hidden="true"></span>
+      <h1 class="mb-title">miniClaudio</h1>
+      <span class="mb-plan" id="plan-name"></span>
+    </header>
+
+    <main class="mb-body" id="body"></main>
+
+    <footer class="mb-foot">
+      <div class="mb-foot-status" id="foot-status"></div>
+      <nav class="mb-actions" aria-label="Acciones">
+        <button type="button" data-act="stats">Estadísticas</button>
+        <button type="button" data-act="prefs">Preferencias</button>
+        <button type="button" data-act="quit" class="is-last">Salir</button>
+      </nav>
+    </footer>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
