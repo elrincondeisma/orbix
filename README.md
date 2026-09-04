@@ -4,6 +4,17 @@ Una mascota de escritorio para macOS que reacciona en tiempo real a lo que hace 
 
 > **Orbix no es un producto oficial de Anthropic ni está afiliado con Claude Code.** Es una herramienta independiente que se conecta a Claude Code mediante su sistema de hooks, documentado y soportado públicamente.
 
+<p align="center">
+  <img src="docs/manual/img/mascota-necesita-atencion.png" width="230" alt="La mascota pidiendo tu atención">
+  <img src="docs/manual/img/mascota-escribiendo.png" width="230" alt="La mascota mientras Claude Code escribe código">
+  <img src="docs/manual/img/mascota-terminado.png" width="230" alt="La mascota cuando Claude Code termina">
+</p>
+<p align="center">
+  <img src="docs/manual/img/menubar-sesion.png" width="320" alt="El menubar con el coste de la sesión y de los últimos días">
+  <img src="docs/manual/img/estadisticas.png" width="440" alt="El panel de estadísticas con el desglose por proyecto y por modelo">
+</p>
+<p align="center"><em>Más capturas, de cada pantalla: <a href="docs/manual/MANUAL.md">manual de usuario</a>.</em></p>
+
 ## Qué hace
 
 - **Avisa** — un núcleo de energía en una esquina de tu pantalla cambia de tinte y ritmo según lo que Claude Code está haciendo (pensando, escribiendo código, ejecutando comandos, esperando tu respuesta) y te lo cuenta en un bocadillo.
