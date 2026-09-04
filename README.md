@@ -20,6 +20,12 @@ Todo el procesamiento ocurre **en tu máquina**. Ver [Privacidad](#privacidad) m
 brew install --cask icatala/orbix/orbix
 ```
 
+### Con un agente
+
+¿Tienes Claude Code (u otro agente con acceso a terminal) a mano? Cópiale este prompt y que instale Orbix por ti — comprueba requisitos, instala, arranca y verifica que todo funciona solo, y se detiene justo antes de tocar tu configuración de Claude Code para que ese paso lo confirmes tú:
+
+**→ [Instalación con un agente](docs/manual/AGENT_INSTALL.md)**, prompt listo para copiar y pegar.
+
 ### DMG manual
 
 Descarga la última versión desde [Releases](../../releases). Orbix **no está firmado ni notarizado** por Apple todavía, así que la primera vez que lo abras macOS mostrará un aviso. Es normal en software independiente sin firmar: haz clic derecho sobre `Orbix.app` → **Abrir**, y confirma en el diálogo. Solo hace falta la primera vez.
@@ -34,8 +40,6 @@ Descarga la última versión desde [Releases](../../releases). Orbix **no está 
 Al abrir Orbix por primera vez verás la mascota y el icono en la barra de menús, contando ya tu histórico de tokens (Orbix lee los transcripts que Claude Code guarda en `~/.claude/projects`). Para que también **reaccione** a lo que Claude Code hace en tiempo real, abre **Preferencias → Integración** e instala los hooks — Orbix te explica exactamente qué va a modificar antes de tocar nada, y hace una copia de seguridad de tu configuración.
 
 Guía completa, con capturas de cada pantalla: **[Manual de usuario](docs/manual/MANUAL.md)**.
-
-¿Prefieres que lo instale un agente (Claude Code u otro) en vez de hacerlo tú a mano? **[Instalación con un agente](docs/manual/AGENT_INSTALL.md)** — un prompt listo para copiar y pegar.
 
 ## Privacidad
 
