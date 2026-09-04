@@ -22,13 +22,13 @@ import { projectsRoot } from '../../src/main/ingest/scanner'
  * No corre por defecto (toca el `~/.claude` del usuario y las cifras cambian
  * cada día). Para lanzarla:
  *
- *   MINICLAUDIO_REAL=1 npx vitest run tests/integration/real-ingest.test.ts
+ *   ORBIX_REAL=1 npx vitest run tests/integration/real-ingest.test.ts
  *
  * Publica las cifras a grano de petición y el ratio línea/petición: es el
  * PUNTO ABIERTO B4 de 02-esquema-bd.md §8.
  */
 
-const ENABLED = process.env['MINICLAUDIO_REAL'] === '1'
+const ENABLED = process.env['ORBIX_REAL'] === '1'
 const TZ = 'Europe/Madrid'
 const PLAN = {
   tierId: 'default_claude_max_20x',
@@ -55,8 +55,8 @@ describe.skipIf(!ENABLED)('ingesta real de ~/.claude/projects', () => {
       const root = projectsRoot()
       expect(existsSync(root)).toBe(true)
 
-      const dir = mkdtempSync(join(tmpdir(), 'miniclaudio-real-'))
-      const dbPath = join(dir, 'miniclaudio.db')
+      const dir = mkdtempSync(join(tmpdir(), 'orbix-real-'))
+      const dbPath = join(dir, 'orbix.db')
       // se imprime para poder auditar la cifra con un escaneo independiente
       // eslint-disable-next-line no-console
       console.log(`BD de la prueba: ${dbPath}`)

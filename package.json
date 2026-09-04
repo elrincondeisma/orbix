@@ -1,6 +1,6 @@
 {
-  "name": "miniclaudio",
-  "productName": "miniClaudio",
+  "name": "orbix",
+  "productName": "Orbix",
   "version": "0.1.0",
   "description": "Mascota de escritorio que vigila Claude Code y lleva las cuentas",
   "private": true,

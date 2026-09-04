@@ -1,5 +1,5 @@
 /**
- * miniClaudio — controles de formulario de Preferencias.
+ * Orbix — controles de formulario de Preferencias.
  *
  * Sin framework (01-arquitectura.md §5): plantillas con template literals y
  * actualización puntual. Cada control devuelve su elemento y un `set()` para

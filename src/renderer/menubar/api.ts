@@ -1,5 +1,5 @@
 /**
- * miniClaudio — superficie IPC del popover del menubar.
+ * Orbix — superficie IPC del popover del menubar.
  *
  * Espejo en tiempo de compilación de la lista blanca de `src/preload/menubar.ts`.
  *
@@ -21,8 +21,8 @@ import type {
 /** En producción el renderer se carga con `file://`; en `dev`, con `http://`. */
 const IS_DEV = location.protocol.startsWith('http')
 
-function bridge(): NonNullable<Window['miniClaudio']> | null {
-  return window.miniClaudio ?? null
+function bridge(): NonNullable<Window['Orbix']> | null {
+  return window.Orbix ?? null
 }
 
 export function hasBridge(): boolean {

@@ -1,5 +1,5 @@
 /**
- * miniClaudio — persistencia de los eventos de hook en `hook_events`.
+ * Orbix — persistencia de los eventos de hook en `hook_events`.
  *
  * Implementa el puerto `HookEventSink` que declara `router.ts`. La sentencia se prepara
  * una vez, no por evento: `PreToolUse`/`PostToolUse` llegan en ráfagas.

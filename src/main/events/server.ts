@@ -1,5 +1,5 @@
 /**
- * miniClaudio — servidor HTTP local de eventos.
+ * Orbix — servidor HTTP local de eventos.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §2.
  *
@@ -49,7 +49,7 @@ export interface EventServerOptions {
   onEvent: (event: NormalizedHookEvent) => void
   /** Avisos no fatales (`PORT_FALLBACK`, `PORT_UNAVAILABLE`). */
   onNotice?: (notice: AppNotice) => void
-  /** Se llama en cuanto el `listen` tiene éxito, para reescribir `~/.claude/miniclaudio/port`. */
+  /** Se llama en cuanto el `listen` tiene éxito, para reescribir `~/.claude/orbix/port`. */
   onPort?: (port: number) => void
   /** Versión de la app, para `GET /health`. */
   version: string

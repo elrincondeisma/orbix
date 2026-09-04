@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bootstrap del proceso `main`.
+ * Orbix — bootstrap del proceso `main`.
  *
  * Fuente de verdad: `01-arquitectura.md` §8 (arranque y ciclo de vida).
  *
@@ -75,6 +75,7 @@ let unregisterIpc: (() => void) | null = null
 let stopWatchingDisplays: (() => void) | null = null
 let ingestTimer: NodeJS.Timeout | null = null
 let purgeTimer: NodeJS.Timeout | null = null
+let levelBTimer: NodeJS.Timeout | null = null
 let screenLocked = false
 let shuttingDown = false
 /** true en cuanto `bootstrap()` termina entero. Distingue «fallo al arrancar» de
@@ -82,20 +83,20 @@ let shuttingDown = false
 let booted = false
 
 /**
- * `~/Library/Application Support/miniClaudio/`. Con `MINICLAUDIO_DEV=1` se usa el sufijo
+ * `~/Library/Application Support/Orbix/`. Con `ORBIX_DEV=1` se usa el sufijo
  * `-dev` para poder trastear sin ensuciar los datos buenos. Se calcula UNA vez y se fija
  * en Electron antes de que nadie más pregunte por la ruta.
  */
 const USER_DATA_DIR = ((): string => {
   const base = app.getPath('userData')
-  if (process.env['MINICLAUDIO_DEV'] !== '1') return base
+  if (process.env['ORBIX_DEV'] !== '1') return base
   const dev = `${base}-dev`
   app.setPath('userData', dev)
   return dev
 })()
 
 /** La BD vive junto a las preferencias, en el mismo `userData`. */
-const DB_PATH = join(USER_DATA_DIR, 'miniclaudio.db')
+const DB_PATH = join(USER_DATA_DIR, 'orbix.db')
 
 const prefsStore = new PrefsStore({
   file: prefsPath(USER_DATA_DIR),
@@ -130,7 +131,7 @@ function report(scope: string, error: unknown): void {
  * Un fallo de permisos tiene que decirse, no disimularse.
  */
 function checkUserDataWritable(dir: string): unknown {
-  const probe = join(dir, '.miniclaudio-write-test')
+  const probe = join(dir, '.orbix-write-test')
   try {
     mkdirSync(dir, { recursive: true })
     writeFileSync(probe, '')
@@ -150,7 +151,7 @@ if (userDataProblem !== null) {
     () => app.exit(1)
   )
 } else if (!app.requestSingleInstanceLock()) {
-  // Ya hay una miniClaudio viva con este mismo `userData`: se le pide que saque su
+  // Ya hay una Orbix viva con este mismo `userData`: se le pide que saque su
   // popover (evento `second-instance`) y esta copia se retira. Tampoco esto se hace en
   // silencio, por la misma razón.
   logSync(
@@ -227,7 +228,7 @@ async function bootstrap(): Promise<void> {
     push.notice(
       'error',
       'DB_FUTURE_SCHEMA',
-      'La base de datos es de una versión más nueva de miniClaudio: se abrió en solo lectura.'
+      'La base de datos es de una versión más nueva de Orbix: se abrió en solo lectura.'
     )
   }
 
@@ -409,6 +410,24 @@ function scheduleIngestLoop(): void {
   }, interval)
 }
 
+/**
+ * Ciclo de Nivel B según `prefs.levelBIntervalMs` (20 min por defecto). Se recrea en
+ * cada `applyPrefs`, así que reacciona tanto a que se active/desactive como a que
+ * cambie el intervalo. Con `levelBEnabled: false` (el valor de fábrica) esto no hace
+ * nada: `refreshLive()` nunca gasta una petición sin permiso explícito.
+ */
+function scheduleLevelBLoop(): void {
+  if (levelBTimer !== null) clearInterval(levelBTimer)
+  levelBTimer = null
+
+  const prefs = prefsStore.get()
+  if (!prefs.levelBEnabled) return
+
+  levelBTimer = setInterval(() => {
+    void claude?.refreshLive().catch((error: unknown) => report('nivel-b', error))
+  }, prefs.levelBIntervalMs)
+}
+
 function schedulePurge(layer: DataLayer): void {
   const run = (): void => {
     try {
@@ -526,6 +545,7 @@ function applyPrefs(prefs: Prefs): void {
   }
 
   if (ingestTimer !== null) scheduleIngestLoop()
+  scheduleLevelBLoop()
   // OJO: el arranque automático NO se aplica aquí. Se toca solo desde `prefs:set`, que
   // además relee el estado real del sistema; hacerlo en cada `applyPrefs` reescribiría
   // los Elementos de inicio del usuario en cada cambio de cualquier preferencia.
@@ -563,8 +583,10 @@ app.on('before-quit', (event) => {
 async function shutdown(): Promise<void> {
   if (ingestTimer !== null) clearInterval(ingestTimer)
   if (purgeTimer !== null) clearInterval(purgeTimer)
+  if (levelBTimer !== null) clearInterval(levelBTimer)
   ingestTimer = null
   purgeTimer = null
+  levelBTimer = null
 
   unregisterIpc?.()
   stopWatchingDisplays?.()

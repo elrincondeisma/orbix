@@ -1,4 +1,4 @@
-# miniClaudio — 01. Arquitectura
+# Orbix — 01. Arquitectura
 
 > Fuente de verdad para backend y frontend. Deriva de `00-plan.md`, no lo contradice.
 > Fecha: 2026-09-03.
@@ -173,9 +173,9 @@ export interface PeriodStats {
 
 export interface SessionStats extends PeriodStats {
   sessionId: string | null
-  projectKey: string | null      // "-Users-icatala-Projects-propios-miniClaudio"
-  projectName: string | null     // "miniClaudio"
-  projectPath: string | null     // "/Users/icatala/Projects/propios/miniClaudio"
+  projectKey: string | null      // "-Users-icatala-Projects-propios-Orbix"
+  projectName: string | null     // "Orbix"
+  projectPath: string | null     // "/Users/icatala/Projects/propios/Orbix"
   startedAt: string | null       // ISO UTC
   lastActivityAt: string | null  // ISO UTC
   isActive: boolean              // última actividad < 30 min
@@ -321,7 +321,7 @@ export interface PetVisualPrefs {
 }
 ```
 
-Persistencia: fichero JSON `~/Library/Application Support/miniClaudio/prefs.json`, escritura
+Persistencia: fichero JSON `~/Library/Application Support/Orbix/prefs.json`, escritura
 atómica (temp + `rename`). *Alternativa descartada:* tabla en SQLite — las prefs deben poder
 leerse antes de que la BD esté migrada.
 
@@ -330,7 +330,7 @@ leerse antes de que la BD esté migrada.
 ## 4. Estructura del repositorio
 
 ```
-miniClaudio/
+Orbix/
 ├── package.json
 ├── electron.vite.config.ts
 ├── electron-builder.yml
@@ -344,7 +344,7 @@ miniClaudio/
 │   ├── trayTemplate.png  trayTemplate@2x.png
 │   └── sounds/                   # ver 04-frontal.md §8
 ├── scripts/
-│   └── hook/miniclaudio-hook.sh  # se copia a ~/.claude/miniclaudio/ al instalar
+│   └── hook/orbix-hook.sh  # se copia a ~/.claude/orbix/ al instalar
 ├── src/
 │   ├── shared/
 │   │   ├── ipc.ts                # nombres de canal + firmas
@@ -424,8 +424,8 @@ añadirían generación de código y un runtime para 9 tablas conocidas y fijas.
 
 ```jsonc
 {
-  "name": "miniclaudio",
-  "productName": "miniClaudio",
+  "name": "orbix",
+  "productName": "Orbix",
   "version": "0.1.0",
   "main": "./out/main/index.js",
   "scripts": {
@@ -471,8 +471,8 @@ compila en ambos contextos. Se verifica con un test de lint.
 
 ```yaml
 # electron-builder.yml
-appId: com.icatala.miniclaudio
-productName: miniClaudio
+appId: com.icatala.orbix
+productName: Orbix
 copyright: © 2026 Ismael Catalá
 directories:
   output: release
@@ -481,7 +481,7 @@ files:
   - out/**/*
   - resources/sounds/**/*
   - resources/trayTemplate*.png
-  - scripts/hook/miniclaudio-hook.sh
+  - scripts/hook/orbix-hook.sh
 asarUnpack:
   - "**/*.node"                 # better-sqlite3
   - "scripts/hook/**"           # el hook debe ser un fichero real, no dentro de asar
@@ -499,7 +499,7 @@ mac:
     LSUIElement: 1              # app de barra de menús: sin icono en el Dock
     NSHumanReadableCopyright: © 2026 Ismael Catalá
 dmg:
-  title: miniClaudio ${version}
+  title: Orbix ${version}
   contents:
     - { x: 130, y: 220, type: file }
     - { x: 410, y: 220, type: link, path: /Applications }
@@ -545,8 +545,8 @@ app.requestSingleInstanceLock()            # si falla: segundo intento abre el m
 - Cambio de pantallas (`screen` `display-added` / `display-removed` /
   `display-metrics-changed`): reposicionar la ventana de la mascota (ver `04-frontal.md` §3).
 - Rutas: BD y prefs en `app.getPath('userData')` =
-  `~/Library/Application Support/miniClaudio/`. En `devMode` se usa
-  `~/Library/Application Support/miniClaudio-dev/` para no ensuciar los datos buenos.
+  `~/Library/Application Support/Orbix/`. En `devMode` se usa
+  `~/Library/Application Support/Orbix-dev/` para no ensuciar los datos buenos.
 
 ### 8.1 Orden de trabajo sugerido
 

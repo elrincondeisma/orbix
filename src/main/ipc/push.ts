@@ -1,5 +1,5 @@
 /**
- * miniClaudio — canales `push` (main → renderer).
+ * Orbix — canales `push` (main → renderer).
  *
  * Fuente de verdad: `01-arquitectura.md` §3.3.
  *

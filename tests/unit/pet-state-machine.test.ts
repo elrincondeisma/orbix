@@ -73,7 +73,7 @@ function evt(name: string, extra: Record<string, unknown> = {}): NormalizedHookE
     JSON.stringify({
       hook_event_name: name,
       session_id: 'sess-1',
-      cwd: '/Users/icatala/Projects/propios/miniClaudio',
+      cwd: '/Users/icatala/Projects/propios/Orbix',
       ...extra
     })
   )
@@ -124,13 +124,13 @@ describe('mapa evento → PetState', () => {
   it('SessionStart despierta a la mascota y saluda con el proyecto', () => {
     h.machine.handleHookEvent(evt('SessionStart', { source: 'startup' }))
     expect(h.machine.state).toBe(PetState.WAKING)
-    expect(h.last()?.bubble?.text).toBe('Hola 👋 miniClaudio')
+    expect(h.last()?.bubble?.text).toBe('Hola 👋 Orbix')
   })
 
-  it('UserPromptSubmit → THINKING sin bocadillo', () => {
+  it('UserPromptSubmit → THINKING con "pensando…" (sin herramienta todavía)', () => {
     h.machine.handleHookEvent(evt('UserPromptSubmit', { prompt: 'hola' }))
     expect(h.machine.state).toBe(PetState.THINKING)
-    expect(h.last()?.bubble).toBeUndefined()
+    expect(h.last()?.bubble?.text).toBe('Orbix: pensando…')
   })
 
   it('PreToolUse se clasifica por herramienta', () => {
@@ -168,7 +168,7 @@ describe('mapa evento → PetState', () => {
     h.machine.handleHookEvent(evt('Stop'))
     expect(h.machine.state).toBe(PetState.DONE)
     expect(h.last()?.sound).toBe('done')
-    expect(h.last()?.bubble?.text).toBe('miniClaudio — listo')
+    expect(h.last()?.bubble?.text).toBe('Orbix — listo')
   })
 
   it('Notification → NEEDS_YOU pegajoso, con el mensaje REAL y sonido attention', () => {
@@ -182,7 +182,7 @@ describe('mapa evento → PetState', () => {
 
   it('Notification sin mensaje usa el respaldo con el nombre del proyecto', () => {
     h.machine.handleHookEvent(evt('Notification'))
-    expect(h.last()?.bubble?.text).toBe('miniClaudio te necesita')
+    expect(h.last()?.bubble?.text).toBe('Orbix te necesita')
   })
 
   it('SessionEnd → SLEEPING y ahí se queda', () => {
@@ -254,9 +254,38 @@ describe('resolución de eventos que se pisan', () => {
     const tras = h.commands.length
     h.clock.advance(1000)
     h.machine.handleHookEvent(evt('UserPromptSubmit'))
-    // No se emite un comando nuevo: THINKING no lleva bocadillo.
-    expect(h.commands).toHaveLength(tras)
+    // Se reenvía un comando (el bocadillo se refresca con el mismo texto: sin
+    // herramienta, THINKING siempre dice "pensando…"), pero el estado sigue
+    // siendo el mismo: no ha habido reinicio de la animación, solo una vuelta más.
+    expect(h.commands).toHaveLength(tras + 1)
     expect(h.machine.state).toBe(PetState.THINKING)
+  })
+
+  it('THINKING cambia el verbo del bocadillo según la herramienta, sin reiniciar el estado (2026-09-04)', () => {
+    // Cada PreToolUse pasa primero por la ráfaga de 250 ms (TOOL_BURST_DEBOUNCE_MS):
+    // hay que vaciarla antes de mirar el estado o el último comando.
+    h.machine.handleHookEvent(evt('PreToolUse', { tool_name: 'Read' }))
+    h.clock.advance(300)
+    expect(h.machine.state).toBe(PetState.THINKING)
+    expect(h.commands.at(-1)?.bubble?.text).toContain('inspeccionando código')
+
+    // Read -> Grep: mismo PetState (THINKING), así que el motor no reinicia la
+    // animación (rama "mismo estado" de `admit`), pero sí refresca el bocadillo
+    // con el verbo de la herramienta nueva.
+    h.machine.handleHookEvent(evt('PreToolUse', { tool_name: 'Grep' }))
+    h.clock.advance(300)
+    expect(h.machine.state).toBe(PetState.THINKING)
+    expect(h.commands.at(-1)?.bubble?.text).toContain('buscando')
+
+    h.machine.handleHookEvent(evt('PreToolUse', { tool_name: 'Task' }))
+    h.clock.advance(300)
+    expect(h.commands.at(-1)?.bubble?.text).toContain('coordinando un agente')
+
+    h.machine.handleHookEvent(evt('PreToolUse', { tool_name: 'mcp__algo__raro' }))
+    h.clock.advance(300)
+    // Herramienta desconocida (MCP, regla 5 de tool-classes.ts): respaldo genérico,
+    // nunca un hueco vacío ni el nombre crudo de la herramienta.
+    expect(h.commands.at(-1)?.bubble?.text).toContain('pensando')
   })
 
   it('las ráfagas de PreToolUse se agrupan en 250 ms y gana la mayor prioridad', () => {

@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bocadillo de la mascota.
+ * Orbix — bocadillo de la mascota.
  * Fuente de verdad: docs/design/04-frontal.md §7.
  *
  * Es un `<div>` HTML y no SVG a propósito: el texto en SVG no se ajusta ni se recorta.
@@ -22,6 +22,14 @@ interface BubbleItem {
   ms: number
   /** Los estados de prioridad ≥ 90 (DONE, NEEDS_YOU) vacían la cola. */
   urgent: boolean
+  /**
+   * THINKING/CODING/RUNNING (Ismael, 2026-09-04): charla de "qué está haciendo ahora
+   * mismo", que puede llegar más rápido de lo que tarda un bocadillo en desaparecer.
+   * Nunca hace cola: sustituye de inmediato a otro ambiental, y nunca interrumpe ni se
+   * cuela detrás de un aviso importante (WAKING, DONE, NEEDS_YOU, PUZZLED,
+   * COMPACTING, WORRIED) — un aviso importante manda siempre sobre la charla ambiental.
+   */
+  ambient: boolean
 }
 
 export class Bubble {
@@ -67,11 +75,12 @@ export class Bubble {
 
   /**
    * Encola un bocadillo. `urgent` corresponde a un `PetCommand` con `priority ≥ 90`.
+   * `ambient` corresponde a THINKING/CODING/RUNNING (§7.2 + Ismael, 2026-09-04).
    *
-   * El contrato `PetRenderer.say(text, ms?)` no lleva prioridad, así que la urgencia
-   * se deriva del estado en curso (DONE y NEEDS_YOU son los únicos ≥ 90). Ver §7.2.
+   * El contrato `PetRenderer.say(text, ms?)` no lleva prioridad ni estado, así que
+   * ambos se derivan del estado en curso del renderer que llama. Ver §7.2.
    */
-  say(text: string, ms?: number, urgent = false): void {
+  say(text: string, ms?: number, urgent = false, ambient = false): void {
     if (!this.#enabled) return
     const clean = text.trim()
     if (clean.length === 0) return
@@ -79,7 +88,8 @@ export class Bubble {
     const item: BubbleItem = {
       text: clean,
       ms: ms !== undefined && Number.isFinite(ms) && ms > 0 ? ms : this.#defaultMs,
-      urgent
+      urgent,
+      ambient
     }
 
     // Repetido: solo se reinicia el temporizador, sin reanimar.
@@ -89,12 +99,28 @@ export class Bubble {
       return
     }
 
-    if (item.urgent) this.#queue.length = 0
-
     if (this.#current === null) {
       this.#show(item)
       return
     }
+
+    if (item.ambient) {
+      // La charla ambiental nunca hace cola: si lo visible también es ambiental,
+      // lo sustituye ya (siempre lo último, sin esperar el mínimo de 1 200 ms); si lo
+      // visible es un aviso importante, se descarta en silencio en vez de colarse
+      // detrás — habrá uno más fresco cuando el aviso importante termine.
+      if (this.#current.ambient) this.#show(item)
+      return
+    }
+
+    if (this.#current.ambient) {
+      // Un aviso importante interrumpe a la charla ambiental de inmediato: no
+      // merece la pena que "buscando…" retrase un error o un "terminado".
+      this.#show(item)
+      return
+    }
+
+    if (item.urgent) this.#queue.length = 0
 
     this.#queue.push(item)
     // Si llega un cuarto, se descarta el más antiguo de la cola, nunca el visible.

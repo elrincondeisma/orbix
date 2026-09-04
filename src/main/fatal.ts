@@ -1,5 +1,5 @@
 /**
- * miniClaudio — errores fatales de arranque.
+ * Orbix — errores fatales de arranque.
  *
  * ⚠️ BUG-1. Una app de barra de menús que falla al arrancar es **invisible**: no tiene
  * ventana, no tiene icono en el Dock y, si nadie lo remedia, se queda como proceso zombi
@@ -50,10 +50,10 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (/not a database|malformed|file is encrypted|corrupt/i.test(raw)) {
     return {
       kind: 'DB_CORRUPT',
-      message: 'La base de datos de miniClaudio está dañada.',
+      message: 'La base de datos de Orbix está dañada.',
       detail:
         'No se ha podido abrir el fichero de datos, probablemente por un cierre brusco ' +
-        'del ordenador.\n\nSi lo mueves de sitio y vuelves a abrir miniClaudio, se creará ' +
+        'del ordenador.\n\nSi lo mueves de sitio y vuelves a abrir Orbix, se creará ' +
         'uno nuevo y se reconstruirá lo que quede en los transcripts de Claude Code.\n\n' +
         'OJO: Claude Code borra sus transcripts a los 30 días, así que lo anterior a eso ' +
         'NO se recupera (salvo lo que traiga el snapshot de rescate). Muévelo en vez de ' +
@@ -65,7 +65,7 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (/NODE_MODULE_VERSION|ERR_DLOPEN_FAILED|was compiled against a different/i.test(raw)) {
     return {
       kind: 'NATIVE_ABI',
-      message: 'miniClaudio no puede cargar su motor de base de datos.',
+      message: 'Orbix no puede cargar su motor de base de datos.',
       detail:
         'El módulo nativo `better-sqlite3` está compilado para otra versión de Node o de ' +
         'Electron.\n\nSi has instalado la app desde el DMG, reinstálala. Si estás en ' +
@@ -76,10 +76,10 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (/no such table|no such column/i.test(raw)) {
     return {
       kind: 'DB_INCOMPATIBLE',
-      message: 'La base de datos de miniClaudio no tiene la forma esperada.',
+      message: 'La base de datos de Orbix no tiene la forma esperada.',
       detail:
         'El fichero de datos existe pero le faltan tablas: puede venir de otra aplicación ' +
-        'o de una versión incompatible.\n\nMuévelo de sitio y vuelve a abrir miniClaudio ' +
+        'o de una versión incompatible.\n\nMuévelo de sitio y vuelve a abrir Orbix ' +
         `para empezar de cero.\n\n${dbPath}\n\n${raw}`,
       revealPath: dbPath
     }
@@ -88,7 +88,7 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (code === 'EACCES' || code === 'EPERM' || code === 'EROFS' || /SQLITE_READONLY/i.test(raw)) {
     return {
       kind: 'DB_PERMISSION',
-      message: 'miniClaudio no tiene permiso para escribir sus datos.',
+      message: 'Orbix no tiene permiso para escribir sus datos.',
       detail:
         'No se ha podido escribir en la carpeta de datos de la aplicación.\n\nRevisa los ' +
         `permisos de esta carpeta o de sus ficheros.\n\n${dbPath}\n\n${raw}`,
@@ -99,9 +99,9 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (/SQLITE_BUSY|database is locked/i.test(raw)) {
     return {
       kind: 'DB_LOCKED',
-      message: 'La base de datos de miniClaudio está bloqueada por otro proceso.',
+      message: 'La base de datos de Orbix está bloqueada por otro proceso.',
       detail:
-        'Puede que haya quedado una copia anterior de miniClaudio abierta.\n\nCiérrala ' +
+        'Puede que haya quedado una copia anterior de Orbix abierta.\n\nCiérrala ' +
         `desde el Monitor de Actividad y vuelve a intentarlo.\n\n${raw}`
     }
   }
@@ -109,7 +109,7 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
   if (/migraci|migration/i.test(raw)) {
     return {
       kind: 'MIGRATION',
-      message: 'miniClaudio no ha podido actualizar su base de datos.',
+      message: 'Orbix no ha podido actualizar su base de datos.',
       detail:
         'La migración del esquema ha fallado y no se ha aplicado ningún cambio (es ' +
         'transaccional: tus datos siguen como estaban).\n\nSi el problema persiste, mueve ' +
@@ -120,7 +120,7 @@ export function describeFatal(error: unknown, dbPath: string): FatalDescription 
 
   return {
     kind: 'UNKNOWN',
-    message: 'miniClaudio no ha podido arrancar.',
+    message: 'Orbix no ha podido arrancar.',
     detail: `Se ha producido un error inesperado durante el arranque.\n\n${raw}`
   }
 }
@@ -139,7 +139,7 @@ const DIALOG_TIMEOUT_MS = 120_000
 
 /** Permite a QA comprobar la guillotina sin esperar dos minutos. */
 function dialogTimeoutMs(): number {
-  const raw = Number(process.env['MINICLAUDIO_DIALOG_TIMEOUT_MS'])
+  const raw = Number(process.env['ORBIX_DIALOG_TIMEOUT_MS'])
   return Number.isFinite(raw) && raw > 0 ? raw : DIALOG_TIMEOUT_MS
 }
 
@@ -190,7 +190,7 @@ function createHostWindow(message: string): BrowserWindow {
     maximizable: false,
     fullscreenable: false,
     alwaysOnTop: true,
-    title: 'miniClaudio',
+    title: 'Orbix',
     backgroundColor: '#1f1b18',
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false }
   })
@@ -203,7 +203,7 @@ function createHostWindow(message: string): BrowserWindow {
   div{padding:0 24px;line-height:1.45}
   strong{display:block;font-size:15px;margin-bottom:6px;color:#d97757}
 </style>
-<div><strong>miniClaudio</strong>${escapeHtml(message)}</div>`
+<div><strong>Orbix</strong>${escapeHtml(message)}</div>`
   void win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
 
   win.setAlwaysOnTop(true, 'modal-panel')
@@ -258,7 +258,7 @@ export function fatal(error: unknown, dbPath: string, scope = 'arranque'): void 
   logSync(error instanceof Error && error.stack !== undefined ? error.stack : text(error))
 
   // Escotilla para QA automatizado y CI: comprobar la SALIDA sin una persona delante.
-  if (process.env['MINICLAUDIO_NO_DIALOG'] === '1') {
+  if (process.env['ORBIX_NO_DIALOG'] === '1') {
     app.exit(1)
     return
   }
@@ -295,7 +295,7 @@ export function fatal(error: unknown, dbPath: string, scope = 'arranque'): void 
   void dialog
     .showMessageBox(host, {
       type: 'error',
-      title: 'miniClaudio',
+      title: 'Orbix',
       message: info.message,
       detail: info.detail,
       buttons,

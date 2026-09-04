@@ -1,5 +1,5 @@
 /**
- * miniClaudio — manejadores de los canales `invoke` (renderer → main).
+ * Orbix — manejadores de los canales `invoke` (renderer → main).
  *
  * Fuente de verdad: `01-arquitectura.md` §3.2.
  *
@@ -316,7 +316,14 @@ export function registerIpcHandlers(ctx: IpcContext): () => void {
   onCh('levelB:setEnabled', async (request) => {
     const enabled = asObject(request)['enabled'] === true
     const result = await claude.setLevelBEnabled(enabled)
-    prefs.set({ levelBEnabled: enabled })
+    // `applyPrefs` (no solo `prefs.set`) para que el ciclo de refresco periódico se
+    // arranque o se pare ya mismo — ver `scheduleLevelBLoop` en `main/index.ts`.
+    ctx.applyPrefs(prefs.set({ levelBEnabled: enabled }))
+    // Al activarlo, un primer refresco inmediato: no tiene sentido hacer esperar hasta
+    // 20 minutos el primer dato real. Si falla, degradación silenciosa de siempre.
+    if (enabled && result.verified) {
+      void claude.refreshLive().catch((error: unknown) => ctx.onError(error))
+    }
     return result
   })
 

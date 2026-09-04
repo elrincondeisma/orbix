@@ -1,5 +1,5 @@
 /**
- * miniClaudio — desglose por proyecto o por modelo, en barras horizontales.
+ * Orbix — desglose por proyecto o por modelo, en barras horizontales.
  *
  * `stats:getSeries` solo devuelve la serie total (`by: null`), así que el «por
  * proyecto» y el «por modelo» se resuelven con `stats:getBreakdown`, que sí

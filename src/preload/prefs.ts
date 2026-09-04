@@ -1,5 +1,5 @@
 /**
- * miniClaudio — preload de la ventana de preferencias.
+ * Orbix — preload de la ventana de preferencias.
  *
  * El formulario de `04-frontal.md` §11 no entra en este lote de trabajo; la ventana
  * existe como esqueleto. La superficie IPC ya está declarada según §3.2.

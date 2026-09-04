@@ -1,9 +1,9 @@
 /**
- * miniClaudio — persistencia de preferencias.
+ * Orbix — persistencia de preferencias.
  *
  * Fuente de verdad: `01-arquitectura.md` §3.5.
  *
- * Fichero JSON en `~/Library/Application Support/miniClaudio/prefs.json`, con escritura
+ * Fichero JSON en `~/Library/Application Support/Orbix/prefs.json`, con escritura
  * atómica (temp + fsync + rename). *Alternativa descartada:* tabla en SQLite — las
  * preferencias deben poder leerse ANTES de que la base de datos esté migrada.
  *

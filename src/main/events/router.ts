@@ -1,5 +1,5 @@
 /**
- * miniClaudio — enrutado de un evento de hook: máquina de estados + persistencia.
+ * Orbix — enrutado de un evento de hook: máquina de estados + persistencia.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §6.6.
  *

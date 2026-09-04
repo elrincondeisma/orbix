@@ -1,5 +1,5 @@
 /**
- * miniClaudio — preload de la ventana de la mascota.
+ * Orbix — preload de la ventana de la mascota.
  *
  * Superficie mínima: la mascota solo dibuja. No consulta estadísticas ni preferencias;
  * `main` le empuja todo lo que necesita.

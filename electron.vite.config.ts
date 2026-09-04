@@ -8,7 +8,7 @@ const shared = { '@shared': resolve('src/shared') }
  * Los cuatro preloads corren con `sandbox: true` (01-arquitectura.md §3.1) y en el
  * sandbox de Electron `require()` solo resuelve unos pocos módulos internos: una
  * ruta relativa como `require('./common.cjs')` lanza «module not found» y el
- * preload muere EN SILENCIO, dejando `window.miniClaudio` sin definir.
+ * preload muere EN SILENCIO, dejando `window.Orbix` sin definir.
  *
  * Como `common.ts` lo importan las cuatro entradas, Rollup lo saca por defecto a
  * un chunk compartido. Este plugin le da un id distinto por cada preload que lo
@@ -18,7 +18,7 @@ const shared = { '@shared': resolve('src/shared') }
 function selfContainedPreloads(): Plugin {
   const commonFile = resolve('src/preload/common.ts')
   return {
-    name: 'miniclaudio:self-contained-preloads',
+    name: 'orbix:self-contained-preloads',
     enforce: 'pre',
     resolveId(source, importer) {
       if (importer === undefined || source !== './common') return null
@@ -49,7 +49,7 @@ export default defineConfig({
          * Las cuatro ventanas corren con `sandbox: true` (01-arquitectura.md §3.1)
          * y Electron NO carga preloads ESM en un renderer aislado: tienen que ser
          * CommonJS. Con `"type": "module"` en package.json, el formato por defecto
-         * de electron-vite es ESM (`.mjs`) y `window.miniClaudio` no llega a existir.
+         * de electron-vite es ESM (`.mjs`) y `window.Orbix` no llega a existir.
          * Verificado en Electron 37: sin esto, el puente queda `undefined`.
          */
         output: {

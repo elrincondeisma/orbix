@@ -1,5 +1,5 @@
 /**
- * miniClaudio — validación y normalización de los payloads de hook.
+ * Orbix — validación y normalización de los payloads de hook.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §3 y §6.2.
  *

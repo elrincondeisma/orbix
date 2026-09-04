@@ -1,5 +1,5 @@
 /**
- * miniClaudio — estado del ingestor: banda de progreso arriba y línea de pie.
+ * Orbix — estado del ingestor: banda de progreso arriba y línea de pie.
  * Fuente de verdad: docs/design/04-frontal.md §10.3 y §10.6.
  *
  * En el primer arranque el popover se abre con la banda de ingesta arriba del todo

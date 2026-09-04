@@ -1,5 +1,5 @@
 /**
- * miniClaudio — constantes compartidas: puerto, rutas relativas y ventanas de tiempo.
+ * Orbix — constantes compartidas: puerto, rutas relativas y ventanas de tiempo.
  *
  * REGLA DURA: sin imports de `node:*` ni de `electron`. Las rutas se expresan como
  * fragmentos RELATIVOS al home; quien tiene `node:path` (el proceso `main`) las resuelve.
@@ -11,8 +11,8 @@ import type { Corner, PeriodKey, Prefs } from './types'
 // Identidad
 // ---------------------------------------------------------------------------
 
-export const APP_NAME = 'miniClaudio'
-export const APP_ID = 'com.icatala.miniclaudio'
+export const APP_NAME = 'Orbix'
+export const APP_ID = 'com.icatala.orbix'
 
 // ---------------------------------------------------------------------------
 // Servidor de eventos (03-contrato-eventos.md §2)
@@ -29,9 +29,9 @@ export const EVENT_PORT_CANDIDATES: readonly number[] = Object.freeze(
 export const EVENT_ROUTE = '/event'
 export const HEALTH_ROUTE = '/health'
 
-export const TOKEN_HEADER = 'x-miniclaudio-token'
+export const TOKEN_HEADER = 'x-orbix-token'
 /** Con la capitalización que usa el script del hook (las cabeceras HTTP son insensibles). */
-export const TOKEN_HEADER_SENT = 'X-MiniClaudio-Token'
+export const TOKEN_HEADER_SENT = 'X-Orbix-Token'
 
 /** 64 KiB. Por encima → 413 y se corta la conexión. */
 export const MAX_EVENT_BODY_BYTES = 64 * 1024
@@ -85,24 +85,24 @@ export const CLAUDE_SETTINGS_REL = '.claude/settings.json'
 export const CLAUDE_PROJECTS_REL = '.claude/projects'
 
 /** Nuestro directorio de coordinación, creado con 0700. */
-export const MINICLAUDIO_DIR_REL = '.claude/miniclaudio'
+export const ORBIX_DIR_REL = '.claude/orbix'
 export const HOOK_SCRIPT_FILE = 'hook.sh'
 export const TOKEN_FILE = 'token'
 export const PORT_FILE = 'port'
 export const LOCK_FILE = '.lock'
 
 /** Ruta del hook tal cual se escribe en `settings.json` (Claude Code expande `~`). */
-export const HOOK_COMMAND = '~/.claude/miniclaudio/hook.sh'
+export const HOOK_COMMAND = '~/.claude/orbix/hook.sh'
 
 /**
  * Marca de identidad de una entrada de hook nuestra. Una entrada es "nuestra" si y solo si
  * su `command` contiene esta subcadena. Nada más: no se usan claves extra en el JSON.
  */
-export const HOOK_MARKER = 'miniclaudio/hook.sh'
+export const HOOK_MARKER = 'orbix/hook.sh'
 
 /** Prefijo de los backups de `settings.json`. */
-export const BACKUP_PREFIX = 'settings.json.miniclaudio-bak-'
-export const TMP_SETTINGS_SUFFIX = '.miniclaudio-tmp'
+export const BACKUP_PREFIX = 'settings.json.orbix-bak-'
+export const TMP_SETTINGS_SUFFIX = '.orbix-tmp'
 /** Cuántos backups se conservan; el resto se borran. */
 export const MAX_BACKUPS = 5
 /** Timeout del lock de fichero durante la instalación. */
@@ -135,7 +135,7 @@ export const HOOK_EVENTS_PLAIN: readonly string[] = Object.freeze([
 /** Los dos eventos de herramienta, que se instalan con `matcher: '*'`. */
 export const HOOK_EVENTS_TOOL: readonly string[] = Object.freeze(['PreToolUse', 'PostToolUse'])
 
-/** Los nueve eventos que instala miniClaudio. */
+/** Los nueve eventos que instala Orbix. */
 export const HOOK_EVENTS_ALL: readonly string[] = Object.freeze([
   ...HOOK_EVENTS_PLAIN,
   ...HOOK_EVENTS_TOOL
@@ -143,7 +143,7 @@ export const HOOK_EVENTS_ALL: readonly string[] = Object.freeze([
 
 /** Red de seguridad de Claude Code, en segundos. */
 export const HOOK_TIMEOUT_SECONDS = 2
-/** Versión del script; debe coincidir con `# miniclaudio-hook-version:` de `hook.sh`. */
+/** Versión del script; debe coincidir con `# orbix-hook-version:` de `hook.sh`. */
 export const HOOK_SCRIPT_VERSION = '1'
 
 // ---------------------------------------------------------------------------
@@ -252,7 +252,9 @@ export const DEFAULT_PREFS_BASE: Readonly<Omit<Prefs, 'timezone'>> = Object.free
   ingestIntervalMs: 3000,
 
   levelBEnabled: false,
-  levelBIntervalMs: 300_000,
+  // 20 min: decisión explícita de Ismael el 2026-09-04 (gasto pequeño y predecible,
+  // ~3 peticiones/hora, frente al mínimo de 1 min que permitiría PREFS_LIMITS).
+  levelBIntervalMs: 1_200_000,
 
   detailedToolStates: true,
 
@@ -263,7 +265,7 @@ export const DEFAULT_PREFS_BASE: Readonly<Omit<Prefs, 'timezone'>> = Object.free
 
 /** Rangos admitidos, usados por la validación de `prefs:set`. */
 export const PREFS_LIMITS = Object.freeze({
-  petScale: Object.freeze([0.75, 1, 1.25, 1.5]) as readonly number[],
+  petScale: Object.freeze([0.5, 0.75, 1, 1.25, 1.5]) as readonly number[],
   petOpacityIdle: Object.freeze({ min: 0.35, max: 1 }),
   bubbleMs: Object.freeze({ min: 2000, max: 15_000 }),
   volume: Object.freeze({ min: 0, max: 1 }),

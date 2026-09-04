@@ -20,7 +20,7 @@ export function freshDb(): { db: Db; prices: PriceCache } {
 
 /** Directorio temporal con la forma de `~/.claude/projects`. */
 export function makeProjectsRoot(): string {
-  return mkdtempSync(join(tmpdir(), 'miniclaudio-projects-'))
+  return mkdtempSync(join(tmpdir(), 'orbix-projects-'))
 }
 
 /**

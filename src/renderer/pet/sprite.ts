@@ -1,5 +1,5 @@
 /**
- * miniClaudio — arte de la mascota: núcleo de IA.
+ * Orbix — arte de la mascota: núcleo de IA.
  *
  * Fuente: `resources/pet/` (arte definitivo de Ismael, ya recortado y alineado).
  * Metadatos y ciclo de reposo: `resources/pet/frames.json`.

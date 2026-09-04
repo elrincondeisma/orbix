@@ -1,5 +1,5 @@
 /**
- * miniClaudio — composición del subsistema de eventos.
+ * Orbix — composición del subsistema de eventos.
  *
  * Junta las cuatro piezas (instalador, servidor, router y máquina de estados) para que
  * `src/main/index.ts` solo tenga que llamar a `startEventSubsystem()` en el paso 9 del
@@ -71,7 +71,7 @@ export async function startEventSubsystem(
     options.onNotice?.({
       level: 'warn',
       code: 'HOOK_FILES_FAILED',
-      message: 'No se pudieron preparar los ficheros de ~/.claude/miniclaudio.'
+      message: 'No se pudieron preparar los ficheros de ~/.claude/orbix.'
     })
   }
 
@@ -120,7 +120,7 @@ export async function startEventSubsystem(
           level: 'warn',
           code: 'HOOK_REMOVED',
           message:
-            `Alguien ha quitado el hook de miniClaudio de ${removed.join(', ')}. ` +
+            `Alguien ha quitado el hook de Orbix de ${removed.join(', ')}. ` +
             'La mascota dejará de reaccionar a esos eventos; puedes reinstalarlo en Preferencias.'
         })
       }

@@ -1,7 +1,7 @@
-# miniClaudio — 02. Esquema de base de datos e ingestor
+# Orbix — 02. Esquema de base de datos e ingestor
 
 > SQLite (`better-sqlite3`), fichero
-> `~/Library/Application Support/miniClaudio/miniclaudio.db`.
+> `~/Library/Application Support/Orbix/orbix.db`.
 > Fecha: 2026-09-03.
 
 ---
@@ -14,7 +14,7 @@ se escribe en varias líneas JSONL, una por bloque de contenido, y cada línea r
 objeto `usage` completo**.
 
 Evidencia reproducible en 10 segundos
-(`~/.claude/projects/-Users-icatala-Projects-propios-miniClaudio/85415fa7-4d4e-4eef-90aa-b6aa28fb3fc6.jsonl`):
+(`~/.claude/projects/-Users-icatala-Projects-propios-Orbix/85415fa7-4d4e-4eef-90aa-b6aa28fb3fc6.jsonl`):
 
 | Línea | `requestId` | `apiBlockIndex` | `cache_read_input_tokens` | `output_tokens` |
 |---|---|---|---|---|
@@ -76,7 +76,7 @@ bloque del stream. El valor bueno es el máximo.
 
 ```sql
 -- ============================================================
--- miniClaudio · esquema inicial · versión 1
+-- Orbix · esquema inicial · versión 1
 -- ============================================================
 
 -- ---------- clave/valor de estado interno ----------
@@ -96,7 +96,7 @@ CREATE TABLE meta (
 -- ---------- cursor de ingesta, uno por fichero JSONL ----------
 CREATE TABLE ingest_files (
   path             TEXT PRIMARY KEY,          -- ruta absoluta
-  project_key      TEXT NOT NULL,             -- '-Users-icatala-Projects-propios-miniClaudio'
+  project_key      TEXT NOT NULL,             -- '-Users-icatala-Projects-propios-Orbix'
   session_id       TEXT,                      -- uuid del nombre de fichero o del contenido
   is_sidechain     INTEGER NOT NULL DEFAULT 0 CHECK (is_sidechain IN (0,1)),
   dev              INTEGER,                   -- stat.dev
@@ -245,7 +245,7 @@ CREATE TABLE plans (
 -- ---------- histórico de límites (Nivel A y B) ----------
 CREATE TABLE limits_snapshots (
   id             INTEGER PRIMARY KEY,
-  captured_at    TEXT    NOT NULL,   -- cuándo lo leyó miniClaudio
+  captured_at    TEXT    NOT NULL,   -- cuándo lo leyó Orbix
   fetched_at_ms  INTEGER,            -- cachedUsageUtilization.fetchedAtMs (Nivel A)
   source         TEXT    NOT NULL CHECK (source IN ('cache','live')),
   five_hour_pct  REAL,
@@ -266,7 +266,7 @@ distintos, así que las capturas `live` (que no tienen `fetched_at_ms`) nunca ch
 
 Claude Code borra los transcripts a los 30 días, así que el histórico vivo es incompleto:
 de un mes solo sobrevivían ~10 días. `data/snapshot-*.json`
-(`schema: miniclaudio.snapshot/2`) trae rollups por día/proyecto/modelo ya a grano de
+(`schema: orbix.snapshot/2`) trae rollups por día/proyecto/modelo ya a grano de
 petición e incluyendo subagentes, **sin coste** (los precios se aplican al importar).
 
 ```sql
@@ -361,7 +361,7 @@ for f of files where versionOf(f) > current:
 - Los `.sql` deben ser idempotentes en lo posible (`IF NOT EXISTS`, `INSERT OR IGNORE`) para
   que un fallo a mitad no deje la BD irrecuperable.
 - **Antes de migrar**, si `user_version > 0`, copiar el `.db` a
-  `miniclaudio.db.bak-v<current>` (una sola copia por versión, se sobrescribe). Con esto un
+  `orbix.db.bak-v<current>` (una sola copia por versión, se sobrescribe). Con esto un
   downgrade de la app siempre tiene salida.
 - Si `user_version > máxima versión conocida` (el usuario abrió una app más vieja):
   **no tocar nada**, arrancar en modo solo lectura y emitir `app:notice` de nivel `error`.
@@ -1036,7 +1036,7 @@ Las cifras de dinero no se fijan aquí a propósito: cambian cada hora. Lo que s
 invariante y debe comprobarse es que **el total de la app coincide con un escaneo
 independiente de `~/.claude/projects`** en todos los días con transcripts vivos (§5.6.1).
 Ese cuadre está automatizado en `tests/integration/real-ingest.test.ts`
-(`MINICLAUDIO_REAL=1 npm test`).
+(`ORBIX_REAL=1 npm test`).
 
 ### Fixtures obligatorios en `tests/fixtures/`
 

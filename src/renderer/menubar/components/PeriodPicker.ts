@@ -1,5 +1,5 @@
 /**
- * miniClaudio — selector de periodo compartido por los dos desgloses.
+ * Orbix — selector de periodo compartido por los dos desgloses.
  * Fuente de verdad: docs/design/04-frontal.md §10.3.
  *
  * Es un `radiogroup` de verdad para que funcione con teclado y con VoiceOver.

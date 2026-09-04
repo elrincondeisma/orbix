@@ -1,5 +1,5 @@
 /**
- * miniClaudio — contrato IPC: nombres de canal y firmas.
+ * Orbix — contrato IPC: nombres de canal y firmas.
  *
  * Fuente de verdad: `docs/design/01-arquitectura.md` §3. Los nombres son literales y
  * **no se inventan canales nuevos sin actualizar ese documento**.
@@ -163,7 +163,7 @@ export const PUSH_CHANNELS: readonly PushChannel[] = Object.freeze([
 // ---------------------------------------------------------------------------
 
 /** Puente genérico y tipado. Lo implementa `src/preload/common.ts`. */
-export interface MiniClaudioBridge {
+export interface OrbixBridge {
   invoke<C extends InvokeChannel>(
     channel: C,
     request: InvokeRequest<C>

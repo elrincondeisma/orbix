@@ -1,8 +1,8 @@
 /**
- * Tests del script `scripts/hook/miniclaudio-hook.sh` ejecutándolo DE VERDAD.
+ * Tests del script `scripts/hook/orbix-hook.sh` ejecutándolo DE VERDAD.
  *
  * REGLA DURA que se verifica aquí: **el hook nunca puede bloquear ni ralentizar a Claude
- * Code**. Con miniClaudio cerrado, `curl` falla por conexión rechazada en microsegundos y
+ * Code**. Con Orbix cerrado, `curl` falla por conexión rechazada en microsegundos y
  * el script sale 0. Claude Code no percibe absolutamente nada.
  *
  * Se ejecuta siempre con un `HOME` temporal: el `~/.claude` real no se toca.
@@ -22,7 +22,7 @@ import { HookInstaller } from '../../src/main/events/hook-installer'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = join(HERE, '../..')
-const HOOK_SOURCE = join(REPO, 'scripts/hook/miniclaudio-hook.sh')
+const HOOK_SOURCE = join(REPO, 'scripts/hook/orbix-hook.sh')
 
 const TOKEN = 'c'.repeat(64)
 const PUERTO = 45401
@@ -38,7 +38,7 @@ interface RunResult {
 function runHook(home: string, payload: unknown): Promise<RunResult> {
   return new Promise((resolve, reject) => {
     const started = process.hrtime.bigint()
-    const child = spawn('/bin/sh', [join(home, '.claude/miniclaudio/hook.sh')], {
+    const child = spawn('/bin/sh', [join(home, '.claude/orbix/hook.sh')], {
       env: { ...process.env, HOME: home },
       stdio: ['pipe', 'pipe', 'pipe']
     })
@@ -60,7 +60,7 @@ describe('el hook no bloquea a Claude Code', () => {
   let installer: HookInstaller
 
   beforeAll(() => {
-    home = mkdtempSync(join(tmpdir(), 'miniclaudio-hook-'))
+    home = mkdtempSync(join(tmpdir(), 'orbix-hook-'))
     mkdirSync(join(home, '.claude'), { recursive: true })
     writeFileSync(join(home, '.claude/settings.json'), '{}\n')
     installer = new HookInstaller({ home, hookSourcePath: HOOK_SOURCE })
@@ -74,7 +74,7 @@ describe('el hook no bloquea a Claude Code', () => {
     rmSync(home, { recursive: true, force: true })
   })
 
-  it('CON miniClaudio CERRADO sale 0, sin salida y en un abrir y cerrar de ojos', async () => {
+  it('CON Orbix CERRADO sale 0, sin salida y en un abrir y cerrar de ojos', async () => {
     const result = await runHook(home, { hook_event_name: 'Stop', session_id: 's1' })
 
     expect(result.code).toBe(0)
@@ -121,7 +121,7 @@ describe('el hook no bloquea a Claude Code', () => {
       const result = await runHook(home, {
         hook_event_name: 'Stop',
         session_id: 'sesion-real',
-        cwd: '/Users/icatala/Projects/propios/miniClaudio',
+        cwd: '/Users/icatala/Projects/propios/Orbix',
         transcript_path: '/Users/icatala/.claude/projects/x/y.jsonl',
         permission_mode: 'auto',
         stop_hook_active: false
@@ -136,8 +136,8 @@ describe('el hook no bloquea a Claude Code', () => {
       expect(received).toHaveLength(1)
       expect(received[0]?.event).toBe('Stop')
       expect(received[0]?.sessionId).toBe('sesion-real')
-      expect(received[0]?.projectKey).toBe('-Users-icatala-Projects-propios-miniClaudio')
-      expect(received[0]?.projectName).toBe('miniClaudio')
+      expect(received[0]?.projectKey).toBe('-Users-icatala-Projects-propios-Orbix')
+      expect(received[0]?.projectName).toBe('Orbix')
     } finally {
       await server.stop()
     }
@@ -194,7 +194,7 @@ describe('el hook no bloquea a Claude Code', () => {
     const source = readFileSync(HOOK_SOURCE, 'utf8')
 
     expect(source.startsWith('#!/bin/sh')).toBe(true)
-    expect(source).toContain('# miniclaudio-hook-version: 1')
+    expect(source).toContain('# orbix-hook-version: 1')
     expect(source).toMatch(/-m 1/)
     expect(source).toMatch(/--connect-timeout 0\.3/)
     expect(source).toContain('--data-binary @-')

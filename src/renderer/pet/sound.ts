@@ -1,5 +1,5 @@
 /**
- * miniClaudio — sonidos sintetizados con la Web Audio API.
+ * Orbix — sonidos sintetizados con la Web Audio API.
  * Fuente de verdad: docs/design/04-frontal.md §8.
  *
  * Sin ficheros de audio: son tres pitidos de menos de 300 ms. Un asset binario

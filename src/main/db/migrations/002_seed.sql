@@ -1,5 +1,5 @@
 -- ============================================================
--- miniClaudio · semilla · versión 2
+-- Orbix · semilla · versión 2
 -- Idempotente: INSERT OR IGNORE. Nunca pisa lo que el usuario haya cambiado.
 -- docs/design/02-esquema-bd.md §2.1
 -- ============================================================

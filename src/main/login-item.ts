@@ -1,5 +1,5 @@
 /**
- * miniClaudio — arranque al iniciar sesión.
+ * Orbix — arranque al iniciar sesión.
  *
  * Regla que impone el diseño: **el estado que se enseña es el REAL del sistema**, nunca
  * una copia guardada en `prefs.json`. El usuario puede quitar el elemento de inicio desde

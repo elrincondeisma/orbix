@@ -46,15 +46,15 @@ describe('parseHookBody — derivados que calcula el servidor', () => {
     const result = parse({
       hook_event_name: 'Stop',
       session_id: 'sess-1',
-      cwd: '/Users/icatala/Projects/propios/miniClaudio'
+      cwd: '/Users/icatala/Projects/propios/Orbix'
     })
     expect(result.ok).toBe(true)
     if (!result.ok) return
 
-    expect(result.value.projectPath).toBe('/Users/icatala/Projects/propios/miniClaudio')
+    expect(result.value.projectPath).toBe('/Users/icatala/Projects/propios/Orbix')
     // Coincide con el nombre del directorio de ~/.claude/projects/ (verificado).
-    expect(result.value.projectKey).toBe('-Users-icatala-Projects-propios-miniClaudio')
-    expect(result.value.projectName).toBe('miniClaudio')
+    expect(result.value.projectKey).toBe('-Users-icatala-Projects-propios-Orbix')
+    expect(result.value.projectName).toBe('Orbix')
     expect(result.value.ts).toBe('2026-09-03T09:00:00.000Z')
     expect(result.value.tsEpoch).toBe(NOW.getTime())
     expect(result.value.known).toBe(true)
@@ -159,8 +159,8 @@ describe('isToolError — heurística tolerante (punto abierto C1)', () => {
 
 describe('derivados de proyecto', () => {
   it('toProjectKey usa el mismo formato que ~/.claude/projects', () => {
-    expect(toProjectKey('/Users/icatala/Projects/propios/miniClaudio')).toBe(
-      '-Users-icatala-Projects-propios-miniClaudio'
+    expect(toProjectKey('/Users/icatala/Projects/propios/Orbix')).toBe(
+      '-Users-icatala-Projects-propios-Orbix'
     )
   })
 

@@ -1,5 +1,5 @@
 /**
- * miniClaudio — gráfica de barras por día, en SVG a mano.
+ * Orbix — gráfica de barras por día, en SVG a mano.
  *
  * Sin `uplot` ni ninguna otra dependencia: son barras y dos ejes. Meter un runtime
  * de gráficas en una app que vive 24/7 para esto no sale a cuenta

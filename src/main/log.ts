@@ -1,5 +1,5 @@
 /**
- * miniClaudio — escritura de log garantizada.
+ * Orbix — escritura de log garantizada.
  *
  * ⚠️ Existe por un motivo concreto y medido: `console.log`/`console.error` sobre un
  * **pipe** (que es lo que hay cuando alguien redirige la salida a un fichero, o cuando la

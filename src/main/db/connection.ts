@@ -11,7 +11,7 @@ export type Db = Database.Database
  * puede pasar la ruta que quiera a `openDatabase`.
  */
 export function defaultDbPath(): string {
-  return join(homedir(), 'Library', 'Application Support', 'miniClaudio', 'miniclaudio.db')
+  return join(homedir(), 'Library', 'Application Support', 'Orbix', 'orbix.db')
 }
 
 export interface OpenOptions {

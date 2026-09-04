@@ -1,5 +1,5 @@
 /**
- * miniClaudio — ventana de estadísticas.
+ * Orbix — ventana de estadísticas.
  *
  * F2. Aquí solo está el esqueleto de la ventana (creación, tamaño mínimo, foco);
  * el contenido con gráficas se implementa en la fase 2 con `uplot`.
@@ -38,7 +38,7 @@ export class StatsWindow {
       height: DEFAULT_HEIGHT,
       minWidth: MIN_WIDTH,
       minHeight: MIN_HEIGHT,
-      title: 'Estadísticas — miniClaudio',
+      title: 'Estadísticas — Orbix',
       titleBarStyle: 'hiddenInset',
       show: false,
       backgroundColor: '#00000000',

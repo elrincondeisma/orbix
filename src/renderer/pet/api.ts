@@ -1,5 +1,5 @@
 /**
- * miniClaudio — superficie IPC de la ventana de la mascota.
+ * Orbix — superficie IPC de la ventana de la mascota.
  *
  * Espejo en tiempo de compilación de la lista blanca de `src/preload/pet.ts`.
  * Si se añade un canal aquí, hay que añadirlo allí (y al revés).
@@ -22,8 +22,8 @@ export type PetPrefsPush = PetVisualPrefs & {
   clickThrough?: boolean
 }
 
-function bridge(): NonNullable<Window['miniClaudio']> | null {
-  return window.miniClaudio ?? null
+function bridge(): NonNullable<Window['Orbix']> | null {
+  return window.Orbix ?? null
 }
 
 export function onPetCommand(cb: (cmd: PetCommand) => void): () => void {

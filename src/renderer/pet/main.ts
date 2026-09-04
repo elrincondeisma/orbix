@@ -1,5 +1,5 @@
 /**
- * miniClaudio — arranque del renderer de la mascota.
+ * Orbix — arranque del renderer de la mascota.
  * Fuente de verdad: docs/design/04-frontal.md §3.5 y §4.
  *
  * Este fichero NO piensa: recibe `PetCommand` ya resuelto y lo reparte entre el

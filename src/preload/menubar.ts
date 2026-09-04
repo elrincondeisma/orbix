@@ -1,5 +1,5 @@
 /**
- * miniClaudio — preload del popover del menubar.
+ * Orbix — preload del popover del menubar.
  *
  * Espejo en el renderer: `src/renderer/menubar/api.ts`.
  */

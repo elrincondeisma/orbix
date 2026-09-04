@@ -1,5 +1,5 @@
 /**
- * miniClaudio — Nivel B (opt-in): lectura del token OAuth del llavero de macOS.
+ * Orbix — Nivel B (opt-in): lectura del token OAuth del llavero de macOS.
  *
  * Fuente de verdad: `docs/design/02-esquema-bd.md` §6.1 y punto abierto B3.
  *

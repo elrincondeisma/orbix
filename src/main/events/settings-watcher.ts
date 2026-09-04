@@ -1,5 +1,5 @@
 /**
- * miniClaudio — vigilancia de `~/.claude/settings.json`.
+ * Orbix — vigilancia de `~/.claude/settings.json`.
  *
  * Fuente de verdad: `03-contrato-eventos.md` §5.5.
  *

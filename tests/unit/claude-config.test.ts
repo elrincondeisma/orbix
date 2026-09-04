@@ -59,7 +59,7 @@ describe('extractFromConfig', () => {
 
 describe('readClaudeConfig', () => {
   it('devuelve ok:false sin lanzar si el fichero no existe', () => {
-    const home = mkdtempSync(join(tmpdir(), 'miniclaudio-cfg-'))
+    const home = mkdtempSync(join(tmpdir(), 'orbix-cfg-'))
     try {
       const result = readClaudeConfig(home)
       expect(result.ok).toBe(false)
@@ -71,7 +71,7 @@ describe('readClaudeConfig', () => {
   })
 
   it('lee un ~/.claude.json real colocado en un home temporal', () => {
-    const home = mkdtempSync(join(tmpdir(), 'miniclaudio-cfg-'))
+    const home = mkdtempSync(join(tmpdir(), 'orbix-cfg-'))
     try {
       writeFileSync(join(home, '.claude.json'), readFileSync(FIXTURE, 'utf8'))
       const result = readClaudeConfig(home)
@@ -83,7 +83,7 @@ describe('readClaudeConfig', () => {
   })
 
   it('devuelve ok:false con JSON corrupto en lugar de romper la app', () => {
-    const home = mkdtempSync(join(tmpdir(), 'miniclaudio-cfg-'))
+    const home = mkdtempSync(join(tmpdir(), 'orbix-cfg-'))
     try {
       writeFileSync(join(home, '.claude.json'), '{roto')
       expect(readClaudeConfig(home).ok).toBe(false)

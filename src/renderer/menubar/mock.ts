@@ -1,5 +1,5 @@
 /**
- * miniClaudio — datos de maqueta del popover.
+ * Orbix — datos de maqueta del popover.
  *
  * SOLO desarrollo. `api.ts` carga este módulo de forma diferida y únicamente cuando
  * no hay puente IPC, de modo que en producción el chunk nunca se descarga.

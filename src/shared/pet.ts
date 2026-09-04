@@ -1,5 +1,5 @@
 /**
- * miniClaudio — contrato de la mascota.
+ * Orbix — contrato de la mascota.
  *
  * Fuente de verdad: `docs/design/04-frontal.md` §4 y `docs/design/03-contrato-eventos.md` §6.5.
  * Compartido entre `main` (que decide) y `renderer/pet` (que dibuja).

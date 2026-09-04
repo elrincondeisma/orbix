@@ -1,5 +1,5 @@
 /**
- * miniClaudio — implementación del núcleo de IA (fase F3).
+ * Orbix — implementación del núcleo de IA (fase F3).
  *
  * Sustituye a `SvgRenderer` detrás del MISMO contrato `PetSkin`: `main.ts` solo
  * cambió la línea del `new`. Ni el bucle de comandos, ni el bocadillo, ni los
@@ -36,6 +36,17 @@ const ONE_SHOT_STATES: ReadonlySet<PetState> = new Set([
 
 /** Estados de prioridad ≥ 90: su bocadillo vacía la cola (§7.2). */
 const URGENT_STATES: ReadonlySet<PetState> = new Set([PetState.DONE, PetState.NEEDS_YOU])
+
+/**
+ * "Qué está haciendo ahora mismo": puede llegar más rápido de lo que tarda un
+ * bocadillo en desaparecer, así que en `Bubble` nunca hace cola (ver su comentario
+ * de `BubbleItem.ambient`). Ismael, 2026-09-04.
+ */
+const AMBIENT_STATES: ReadonlySet<PetState> = new Set([
+  PetState.THINKING,
+  PetState.CODING,
+  PetState.RUNNING
+])
 
 /** Sin comandos durante este tiempo, se pausa toda la animación (§9). */
 const DORMANT_AFTER_MS = 60_000
@@ -157,7 +168,7 @@ export class SpriteRenderer implements PetSkin {
 
   say(text: string, ms?: number): void {
     this.#wake()
-    this.#bubble?.say(text, ms, URGENT_STATES.has(this.#state))
+    this.#bubble?.say(text, ms, URGENT_STATES.has(this.#state), AMBIENT_STATES.has(this.#state))
   }
 
   play(anim: PetAnim): void {

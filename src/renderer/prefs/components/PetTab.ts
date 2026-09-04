@@ -1,5 +1,5 @@
 /**
- * miniClaudio — pestaña «Mascota».
+ * Orbix — pestaña «Mascota».
  * Fuente de verdad: docs/design/04-frontal.md §11.
  */
 
@@ -37,10 +37,11 @@ export class PetTab {
       (v) => patch({ followActiveDisplay: v })
     )
 
-    // Las cuatro escalas admitidas por `PREFS_LIMITS.petScale`.
+    // Las cinco escalas admitidas por `PREFS_LIMITS.petScale`.
     this.#scale = segmentedRow<number>(
       'Tamaño',
       [
+        { value: 0.5, label: '0,5×' },
         { value: 0.75, label: '0,75×' },
         { value: 1, label: '1×' },
         { value: 1.25, label: '1,25×' },

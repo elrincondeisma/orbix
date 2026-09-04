@@ -1,5 +1,5 @@
 /**
- * miniClaudio — panel de estadísticas (F2).
+ * Orbix — panel de estadísticas (F2).
  * Fuente de verdad: docs/design/04-frontal.md §10.4 y §10.7.
  *
  * Mismo criterio que el menubar, porque es el mismo principio: un dato con

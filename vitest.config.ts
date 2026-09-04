@@ -13,7 +13,7 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    // tests/integration solo corre con MINICLAUDIO_REAL=1 (usa ~/.claude real)
+    // tests/integration solo corre con ORBIX_REAL=1 (usa ~/.claude real)
     include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     // Los tests del servidor HTTP y del instalador tocan puertos y ficheros temporales.
     fileParallelism: false,

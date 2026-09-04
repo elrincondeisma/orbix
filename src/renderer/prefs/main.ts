@@ -1,5 +1,5 @@
 /**
- * miniClaudio — ventana de Preferencias.
+ * Orbix — ventana de Preferencias.
  * Fuente de verdad: docs/design/04-frontal.md §11.
  *
  * Principio de toda la ventana: el control NO es la fuente de verdad. Se manda el

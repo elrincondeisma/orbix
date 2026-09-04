@@ -1,5 +1,5 @@
 /**
- * miniClaudio — tipos compartidos entre `main`, `preload` y los renderers.
+ * Orbix — tipos compartidos entre `main`, `preload` y los renderers.
  *
  * Fuente de verdad: `docs/design/01-arquitectura.md` §3.4 y §3.5.
  *
@@ -64,11 +64,11 @@ export interface PeriodStats {
 
 export interface SessionStats extends PeriodStats {
   sessionId: string | null
-  /** Ej. "-Users-icatala-Projects-propios-miniClaudio". */
+  /** Ej. "-Users-icatala-Projects-propios-Orbix". */
   projectKey: string | null
-  /** Ej. "miniClaudio". */
+  /** Ej. "Orbix". */
   projectName: string | null
-  /** Ej. "/Users/icatala/Projects/propios/miniClaudio". */
+  /** Ej. "/Users/icatala/Projects/propios/Orbix". */
   projectPath: string | null
   /** ISO UTC. */
   startedAt: string | null
@@ -225,7 +225,7 @@ export interface HookStatus {
   events: string[]
   missingEvents: string[]
   scriptPath: string
-  /** Leída de la línea `# miniclaudio-hook-version: N` del script instalado. */
+  /** Leída de la línea `# orbix-hook-version: N` del script instalado. */
   scriptVersion: string | null
   settingsPath: string
   serverPort: number | null

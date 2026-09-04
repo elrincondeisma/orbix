@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bloque de límites de la suscripción.
+ * Orbix — bloque de límites de la suscripción.
  * Fuente de verdad: docs/design/04-frontal.md §10.5 y §10.6.
  *
  * LA PARTE QUE NO SE PUEDE ESCATIMAR: la antigüedad del dato es de primera clase.
@@ -87,7 +87,7 @@ export class LimitsCard {
     const age = this.#classify(view)
     setAttr(this.element, 'data-age', age)
     this.#renderHeader(view, age)
-    this.#renderBars(view.bars)
+    this.#renderBars(view.bars, age === 'very-stale')
     setStatus(this.element, 'ready')
   }
 
@@ -140,7 +140,16 @@ export class LimitsCard {
     this.#refresh.hidden = view.levelB.enabled !== true
   }
 
-  #renderBars(bars: readonly LimitBar[]): void {
+  /**
+   * `hideReset` (Ismael, 2026-09-04): con el dato muy desfasado, una fecha de
+   * reinicio concreta ("venció el 27 ago") mete más ruido que información — es
+   * técnicamente exacta sobre el fetch congelado, pero para una ventana de 5 horas
+   * que lleva días sin refrescarse esa fecha ya no dice nada real (se habrá
+   * reiniciado decenas de veces desde entonces) y contradice visualmente al aviso
+   * de arriba. El aviso de cabecera ya deja claro que el dato es viejo; la fecha
+   * por barra solo se enseña cuando puede ser mínimamente de fiar.
+   */
+  #renderBars(bars: readonly LimitBar[], hideReset: boolean): void {
     const signature = bars.map((b) => `${b.kind}:${b.label}`).join('|')
     if (signature !== this.#signature) {
       this.#barsHost.replaceChildren()
@@ -167,8 +176,9 @@ export class LimitsCard {
       nodes.fill.style.setProperty('--fill', String(Math.min(1, Math.max(0, bar.percent / 100))))
       setAttr(nodes.root, 'data-severity', bar.severity)
       setAttr(nodes.root, 'data-active', String(bar.isActive))
-      // Si `resetsAt` es null no se muestra nada: no se inventa una hora.
-      setText(nodes.reset, formatReset(bar.resetsAt, this.#timezone))
+      // Si `resetsAt` es null, o el dato está muy desfasado, no se muestra nada:
+      // no se inventa una hora ni se presenta una vieja como si fuera de fiar.
+      setText(nodes.reset, hideReset ? '' : formatReset(bar.resetsAt, this.#timezone))
     })
   }
 }

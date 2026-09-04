@@ -1,5 +1,5 @@
 /**
- * miniClaudio — ventana de preferencias.
+ * Orbix — ventana de preferencias.
  * Fuente de verdad: docs/design/04-frontal.md §11.
  *
  * La ventana y su preload están listos; el formulario con pestañas queda pendiente
@@ -37,7 +37,7 @@ export class PrefsWindow {
       resizable: false,
       maximizable: false,
       fullscreenable: false,
-      title: 'Preferencias — miniClaudio',
+      title: 'Preferencias — Orbix',
       titleBarStyle: 'hiddenInset',
       show: false,
       backgroundColor: '#00000000',

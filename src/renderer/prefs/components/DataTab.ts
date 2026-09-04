@@ -1,5 +1,5 @@
 /**
- * miniClaudio — pestaña «Datos»: plan, precios, base de datos y Nivel B.
+ * Orbix — pestaña «Datos»: plan, precios, base de datos y Nivel B.
  * Fuente de verdad: docs/design/04-frontal.md §11.
  */
 
@@ -66,9 +66,10 @@ export class DataTab {
 
     this.#levelB = switchRow(
       'Refrescar los límites por mi cuenta',
-      'miniClaudio leería tu token de Claude Code del llavero para consultar tu uso ' +
-        'real. Usa una API interna no documentada: si deja de funcionar, se vuelve al ' +
-        'dato en caché sin avisar.',
+      'Cada 20 min, Orbix ejecuta "claude -p /usage" (el comando oficial de ' +
+        'Claude Code, sin interfaz) e interpreta su respuesta. Cada refresco consume ' +
+        'una petición real de tu suscripción. Si algo falla o cambia el formato del ' +
+        'texto, se vuelve al dato en caché de siempre, sin avisar.',
       (v) => {
         void api.setLevelBEnabled(v).then((r) => {
           if (r.ok && !r.data.verified) this.#showLevelBUnverified()
@@ -148,15 +149,14 @@ export class DataTab {
   renderPrefs(prefs: Prefs): void {
     this.#timezone.set(prefs.timezone)
     this.#levelB.set(prefs.levelBEnabled)
-    // PUNTO ABIERTO B2: sin la URL del endpoint el Nivel B no puede funcionar.
-    // Se deja visible y desactivado, con el motivo, en vez de esconderlo.
-    this.#levelB.setDisabled(true)
+    // Ya no está bloqueado (2026-09-04): el punto abierto B2 —el endpoint HTTP interno—
+    // sigue cerrado a propósito, pero `claude -p "/usage"` (cli-usage.ts) es un camino
+    // real y soportado. `#levelBNote` queda para avisos reactivos (verificación
+    // fallida): con el interruptor activado, el estado dice cada cuánto refresca.
+    const minutes = Math.round(prefs.levelBIntervalMs / 60_000)
     setText(
       this.#levelBNote,
-      'Desactivado: todavía no se conoce la URL del endpoint de uso real de Claude Code ' +
-        '(punto abierto B2). No se pone una URL adivinada porque mandar tu token a un ' +
-        'sitio equivocado es peor que no tener la función. Mientras tanto, los límites ' +
-        'salen del caché de Claude Code, siempre con su antigüedad al lado.'
+      prefs.levelBEnabled ? `Activo: se refresca cada ${pluralize(minutes, 'minuto', 'minutos')}.` : ''
     )
   }
 
@@ -233,8 +233,9 @@ export class DataTab {
   #showLevelBUnverified(): void {
     setText(
       this.#levelBNote,
-      'No se ha podido verificar: falta el endpoint (punto abierto B2) o el llavero ha ' +
-        'denegado el acceso. Se sigue usando el dato en caché.'
+      'No se ha podido verificar: no se encontró el ejecutable de claude en las rutas ' +
+        'conocidas (~/.local/bin, /opt/homebrew/bin, /usr/local/bin…). Se sigue usando ' +
+        'el dato en caché.'
     )
   }
 

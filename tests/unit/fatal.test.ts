@@ -19,7 +19,7 @@ vi.mock('electron', () => ({
 
 const { describeFatal } = await import('../../src/main/fatal')
 
-const DB = '/Users/x/Library/Application Support/miniClaudio/miniclaudio.db'
+const DB = '/Users/x/Library/Application Support/Orbix/orbix.db'
 
 describe('describeFatal', () => {
   it('BD corrupta: el caso del corte de luz con el WAL abierto', () => {
@@ -111,7 +111,7 @@ describe('describeFatal', () => {
       const info = describeFatal(error, DB)
       expect(info.message.endsWith('.')).toBe(true)
       // Mayúscula inicial, salvo cuando la frase empieza por el nombre del producto.
-      expect(info.message).toMatch(/^([A-ZÁÉÍÓÚ«]|miniClaudio)/)
+      expect(info.message).toMatch(/^([A-ZÁÉÍÓÚ«]|Orbix)/)
     }
   })
 })

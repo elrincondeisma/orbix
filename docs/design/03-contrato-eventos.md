@@ -1,4 +1,4 @@
-# miniClaudio — 03. Contrato del servidor de eventos, hooks y mapa de estados
+# Orbix — 03. Contrato del servidor de eventos, hooks y mapa de estados
 
 > Fecha: 2026-09-03. Implementa `backend-dev`; `frontend-dev` solo consume `PetCommand`.
 
@@ -14,7 +14,7 @@ esto no. Se materializa en cuatro sitios y los cuatro son obligatorios:
 3. `curl -m 1 --connect-timeout 0.3 ... || true` dentro del script.
 4. `exit 0` incondicional al final del script.
 
-Con miniClaudio cerrado, `curl` falla en < 5 ms con `Connection refused` y el hook sale 0.
+Con Orbix cerrado, `curl` falla en < 5 ms con `Connection refused` y el hook sale 0.
 Claude Code no percibe absolutamente nada.
 
 ---
@@ -45,7 +45,7 @@ Cualquier otra ruta o método → `404` con cuerpo vacío.
 
 Petición:
 - `Content-Type: application/json` (obligatorio; si falta → `415`).
-- `X-MiniClaudio-Token: <token>` (obligatorio; ver §2.3).
+- `X-Orbix-Token: <token>` (obligatorio; ver §2.3).
 - Cuerpo: el JSON tal cual lo entrega Claude Code por stdin.
 
 Respuestas:
@@ -66,12 +66,12 @@ y mover la máquina de estados ocurre siempre después de haber cerrado la respu
 #### `GET /health`
 
 ```json
-{ "app": "miniClaudio", "version": "0.1.0", "pid": 12345,
+{ "app": "Orbix", "version": "0.1.0", "pid": 12345,
   "port": 41414, "ready": true, "instanceId": "b3f1…" }
 ```
 
 Sirve para dos cosas: que el instalador compruebe que el servidor está vivo, y que al
-arrancar podamos distinguir "el puerto lo ocupa otra instancia de miniClaudio" de "el puerto
+arrancar podamos distinguir "el puerto lo ocupa otra instancia de Orbix" de "el puerto
 lo ocupa otro programa cualquiera".
 
 ### 2.2 Seguridad
@@ -86,9 +86,9 @@ peticiones a `localhost` (CSRF de DNS rebinding). Mitigaciones, todas obligatori
    DNS rebinding. Si no → `403`.
 4. **Rechazar cualquier petición con `Origin` o `Referer`.** Un hook nunca las manda; un
    navegador siempre.
-5. **Token compartido** en `X-MiniClaudio-Token`, comparado con
+5. **Token compartido** en `X-Orbix-Token`, comparado con
    `crypto.timingSafeEqual`. Se genera en la instalación (32 bytes aleatorios en hex) y se
-   guarda en `~/.claude/miniclaudio/token` con permisos `0600`.
+   guarda en `~/.claude/orbix/token` con permisos `0600`.
 6. **Sin CORS.** Aunque un navegador consiguiera enviar la petición, no podría leer nada.
 7. **Rate limit**: 50 eventos/segundo. Por encima se descartan y se cuenta el exceso.
 8. Nada de lo recibido se ejecuta, interpola en un shell ni se escribe en disco fuera de la
@@ -96,7 +96,7 @@ peticiones a `localhost` (CSRF de DNS rebinding). Mitigaciones, todas obligatori
 
 ### 2.3 Ficheros de coordinación
 
-Directorio `~/.claude/miniclaudio/` (creado con `0700` en la instalación):
+Directorio `~/.claude/orbix/` (creado con `0700` en la instalación):
 
 | Fichero | Permisos | Contenido |
 |---|---|---|
@@ -114,14 +114,14 @@ conexión rechazada, que es exactamente el comportamiento deseado.
 listen(41414):
   EADDRINUSE ->
      r = GET http://127.0.0.1:41414/health   (timeout 500 ms)
-     si r.app == 'miniClaudio' y r.instanceId != el nuestro:
+     si r.app == 'Orbix' y r.instanceId != el nuestro:
          # ya hay otra instancia. El single-instance-lock de Electron
          # debería habernos parado antes; salimos limpiamente.
          mostrar el popover de la instancia viva y app.quit()
      si no:
          # el puerto lo tiene otro programa
          probar 41415, 41416, … 41424
-         al primero que enganche: escribir ~/.claude/miniclaudio/port
+         al primero que enganche: escribir ~/.claude/orbix/port
          emitir app:notice { level: 'warn', code: 'PORT_FALLBACK',
                              message: 'El puerto 41414 estaba ocupado; usando 41417.' }
      agotados los 11 puertos:
@@ -187,24 +187,24 @@ ts           = new Date().toISOString()          # hora de recepción
 ```
 
 > El `project_key` derivado del `cwd` coincide con el nombre del directorio de
-> `~/.claude/projects/` (verificado: `/Users/icatala/Projects/propios/miniClaudio` →
-> `-Users-icatala-Projects-propios-miniClaudio`). Esto permite cruzar hooks y consumo.
+> `~/.claude/projects/` (verificado: `/Users/icatala/Projects/propios/Orbix` →
+> `-Users-icatala-Projects-propios-Orbix`). Esto permite cruzar hooks y consumo.
 
 ---
 
 ## 4. El script del hook
 
-Ruta de instalación: `~/.claude/miniclaudio/hook.sh` (modo `0755`).
-Origen en el repo: `scripts/hook/miniclaudio-hook.sh`, copiado literalmente en la instalación
+Ruta de instalación: `~/.claude/orbix/hook.sh` (modo `0755`).
+Origen en el repo: `scripts/hook/orbix-hook.sh`, copiado literalmente en la instalación
 (el fichero debe ir en `asarUnpack`, ver `01-arquitectura.md` §7).
 
 ```sh
 #!/bin/sh
-# miniclaudio-hook-version: 1
-# miniClaudio — reenvía el payload del hook al servidor local de la mascota.
+# orbix-hook-version: 1
+# Orbix — reenvía el payload del hook al servidor local de la mascota.
 # Diseñado para no fallar, no bloquear y no imprimir nada. Sale 0 siempre.
 
-DIR="${HOME}/.claude/miniclaudio"
+DIR="${HOME}/.claude/orbix"
 PORT=$(cat "${DIR}/port" 2>/dev/null) || PORT=41414
 [ -z "${PORT}" ] && PORT=41414
 TOKEN=$(cat "${DIR}/token" 2>/dev/null) || TOKEN=""
@@ -212,7 +212,7 @@ TOKEN=$(cat "${DIR}/token" 2>/dev/null) || TOKEN=""
 curl -s -m 1 --connect-timeout 0.3 \
      -X POST \
      -H 'Content-Type: application/json' \
-     -H "X-MiniClaudio-Token: ${TOKEN}" \
+     -H "X-Orbix-Token: ${TOKEN}" \
      --data-binary @- \
      "http://127.0.0.1:${PORT}/event" >/dev/null 2>&1
 
@@ -251,7 +251,7 @@ La estructura de Claude Code es `hooks[<Evento>]` = array de *grupos*, cada grup
 `matcher?` y `hooks[]`. Añadir un grupo propio al array es el patrón que ya usa el fichero
 (`Stop` tiene dos grupos independientes) y es la forma no destructiva de coexistir.
 
-### 5.2 Lo que instala miniClaudio
+### 5.2 Lo que instala Orbix
 
 Para cada uno de estos nueve eventos se añade **un grupo propio**:
 
@@ -260,7 +260,7 @@ Para cada uno de estos nueve eventos se añade **un grupo propio**:
 {
   "hooks": [
     { "type": "command",
-      "command": "~/.claude/miniclaudio/hook.sh",
+      "command": "~/.claude/orbix/hook.sh",
       "timeout": 2,
       "async": true }
   ]
@@ -271,7 +271,7 @@ Para cada uno de estos nueve eventos se añade **un grupo propio**:
   "matcher": "*",
   "hooks": [
     { "type": "command",
-      "command": "~/.claude/miniclaudio/hook.sh",
+      "command": "~/.claude/orbix/hook.sh",
       "timeout": 2,
       "async": true }
   ]
@@ -279,7 +279,7 @@ Para cada uno de estos nueve eventos se añade **un grupo propio**:
 ```
 
 **Marca de identidad:** una entrada es "nuestra" si y solo si
-`typeof h.command === 'string' && h.command.includes('miniclaudio/hook.sh')`.
+`typeof h.command === 'string' && h.command.includes('orbix/hook.sh')`.
 Nada más. No se usan claves extra en el JSON (Claude Code podría rechazarlas).
 
 **Coste de `PreToolUse`/`PostToolUse`:** son los eventos más frecuentes (dos `sh` + dos
@@ -292,17 +292,17 @@ la mascota pierde `CODING`, `RUNNING` y `PUZZLED` pero todo lo demás sigue.
 
 ```
 install():
-  1. mkdir -p ~/.claude/miniclaudio            (0700)
+  1. mkdir -p ~/.claude/orbix            (0700)
   2. si no existe token: escribir crypto.randomBytes(32).toString('hex')   (0600)
-  3. copiar scripts/hook/miniclaudio-hook.sh -> ~/.claude/miniclaudio/hook.sh, chmod 0755
+  3. copiar scripts/hook/orbix-hook.sh -> ~/.claude/orbix/hook.sh, chmod 0755
      (siempre se sobrescribe: así una actualización de la app actualiza el hook)
-  4. escribir ~/.claude/miniclaudio/port con el puerto activo
+  4. escribir ~/.claude/orbix/port con el puerto activo
 
   5. leer ~/.claude/settings.json
        - si no existe            -> raw = '{}'
        - si existe pero no parsea -> ABORTAR con HOOK_WRITE_FAILED y no tocar nada.
                                      Jamás sobrescribir un settings.json ilegible.
-  6. backup: copiar a ~/.claude/settings.json.miniclaudio-bak-<YYYYMMDD-HHmmss>
+  6. backup: copiar a ~/.claude/settings.json.orbix-bak-<YYYYMMDD-HHmmss>
        - conservar como mucho los 5 backups más recientes, borrar el resto
        - guardar la ruta en HookStatus.lastBackupPath
   7. cfg = JSON.parse(raw)
@@ -316,7 +316,7 @@ install():
          # añadir el grupo nuevo al final
          cfg.hooks[E].push(grupoDe(E))
   8. escribir con JSON.stringify(cfg, null, 2) + '\n'
-       - a ~/.claude/settings.json.miniclaudio-tmp
+       - a ~/.claude/settings.json.orbix-tmp
        - fsync
        - rename() sobre el original   (atómico en el mismo volumen)
   9. releer y verificar que parsea y que los nueve eventos tienen nuestra entrada.
@@ -332,7 +332,7 @@ Detalles que importan:
 - **Indentación de 2 espacios**, que es la que ya usa el fichero.
 - `settings.json` es JSON estricto (sin comentarios), verificado. No hace falta un parser
   tolerante tipo JSON5.
-- Los pasos 5-9 se ejecutan **bajo un lock de fichero** (`~/.claude/miniclaudio/.lock`
+- Los pasos 5-9 se ejecutan **bajo un lock de fichero** (`~/.claude/orbix/.lock`
   creado con `wx`) con timeout de 5 s, por si el usuario abre preferencias dos veces.
 - La operación **no requiere que Claude Code esté cerrado**: Claude Code relee
   `settings.json` en cada arranque de sesión. Los cambios aplican a partir de la siguiente.
@@ -348,7 +348,7 @@ uninstall():
         eliminar el array del evento si se queda vacío
      eliminar cfg.hooks si se queda como objeto vacío
   3. escritura atómica + verificación
-  4. NO se borra ~/.claude/miniclaudio/ (token y port son inocuos y facilitan reinstalar)
+  4. NO se borra ~/.claude/orbix/ (token y port son inocuos y facilitan reinstalar)
   5. devolver HookStatus { installed: false }
 ```
 
@@ -358,8 +358,8 @@ uninstall():
 leer settings.json; para cada uno de los 9 eventos, buscar entrada nuestra
 installed             = al menos 1 evento con entrada nuestra
 events / missingEvents= listas correspondientes
-scriptPath            = ~/.claude/miniclaudio/hook.sh
-scriptVersion         = leer la línea '# miniclaudio-hook-version: N' del script instalado
+scriptPath            = ~/.claude/orbix/hook.sh
+scriptVersion         = leer la línea '# orbix-hook-version: N' del script instalado
 foreignHooksPreserved = nº de entradas de comando NO nuestras en todo el objeto hooks
 serverPort / serverListening = del EventServer
 ```

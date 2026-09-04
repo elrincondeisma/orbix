@@ -1,5 +1,5 @@
 /**
- * miniClaudio — popover del menubar.
+ * Orbix — popover del menubar.
  * Fuente de verdad: docs/design/04-frontal.md §10.
  *
  * Reglas de rendimiento (§9.5 y §9.6):

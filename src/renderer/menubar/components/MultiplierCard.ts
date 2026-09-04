@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bloque del multiplicador («6,1× de tu plan Max 20×»).
+ * Orbix — bloque del multiplicador («6,1× de tu plan Max 20×»).
  * Fuente de verdad: docs/design/04-frontal.md §10.3 y §10.6.
  *
  * Nada de mentiras (§1.3): un multiplicador calculado con menos de 30 días de

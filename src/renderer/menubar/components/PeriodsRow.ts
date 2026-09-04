@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bloque «Hoy / 7 días / 30 días».
+ * Orbix — bloque «Hoy / 7 días / 30 días».
  * Fuente de verdad: docs/design/04-frontal.md §10.3 y §10.6.
  *
  * Ojo: todo a cero es un dato válido, no un vacío. Aquí no hay estado «empty».

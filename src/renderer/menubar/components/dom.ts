@@ -1,5 +1,5 @@
 /**
- * miniClaudio — utilidades de DOM del popover.
+ * Orbix — utilidades de DOM del popover.
  *
  * Sin framework de UI (01-arquitectura.md §5): plantillas con template literals y
  * actualización puntual. La regla de §9.6 es dura: se actualizan SOLO los nodos de

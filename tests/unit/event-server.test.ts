@@ -40,7 +40,7 @@ function send(
         headers: {
           host: `127.0.0.1:${port}`,
           'content-type': 'application/json',
-          'x-miniclaudio-token': TOKEN,
+          'x-orbix-token': TOKEN,
           ...options.headers
         }
       },
@@ -73,7 +73,7 @@ describe('EventServer', () => {
       getToken: () => TOKEN,
       onEvent: (event) => received.push(event),
       version: '0.1.0',
-      // Rango propio para no chocar con una instancia real de miniClaudio.
+      // Rango propio para no chocar con una instancia real de Orbix.
       ports: [45311, 45312, 45313, 45314]
     })
     const outcome = await server.start()
@@ -94,7 +94,7 @@ describe('EventServer', () => {
     const payload = {
       hook_event_name: 'Stop',
       session_id: 'sess-42',
-      cwd: '/Users/icatala/Projects/propios/miniClaudio',
+      cwd: '/Users/icatala/Projects/propios/Orbix',
       stop_hook_active: false
     }
     const reply = await send(port, { body: JSON.stringify(payload) })
@@ -105,14 +105,14 @@ describe('EventServer', () => {
     await new Promise((r) => setTimeout(r, 20))
     expect(received).toHaveLength(1)
     expect(received[0]?.event).toBe('Stop')
-    expect(received[0]?.projectName).toBe('miniClaudio')
+    expect(received[0]?.projectName).toBe('Orbix')
   })
 
   it('GET /health identifica la instancia', async () => {
     const reply = await send(port, { method: 'GET', path: '/health' })
     expect(reply.status).toBe(200)
     const body = JSON.parse(reply.body) as Record<string, unknown>
-    expect(body['app']).toBe('miniClaudio')
+    expect(body['app']).toBe('Orbix')
     expect(body['port']).toBe(port)
     expect(body['ready']).toBe(true)
     expect(body['instanceId']).toBe(server.instanceId)
@@ -167,20 +167,20 @@ describe('EventServer', () => {
 
   it('401 sin token o con token incorrecto', async () => {
     const sinToken = await send(port, {
-      headers: { 'x-miniclaudio-token': '' },
+      headers: { 'x-orbix-token': '' },
       body: JSON.stringify({ hook_event_name: 'Stop' })
     })
     expect(sinToken.status).toBe(401)
 
     const malToken = await send(port, {
-      headers: { 'x-miniclaudio-token': 'b'.repeat(64) },
+      headers: { 'x-orbix-token': 'b'.repeat(64) },
       body: JSON.stringify({ hook_event_name: 'Stop' })
     })
     expect(malToken.status).toBe(401)
 
     // Un token de longitud distinta tampoco debe romper la comparación.
     const corto = await send(port, {
-      headers: { 'x-miniclaudio-token': 'x' },
+      headers: { 'x-orbix-token': 'x' },
       body: JSON.stringify({ hook_event_name: 'Stop' })
     })
     expect(corto.status).toBe(401)
@@ -328,10 +328,10 @@ describe('EventServer — fallback de puerto', () => {
   })
 
   it('si el puerto lo ocupa OTRO programa, prueba el siguiente', async () => {
-    // Un servidor cualquiera que no es miniClaudio: la sonda /health no lo reconoce.
+    // Un servidor cualquiera que no es Orbix: la sonda /health no lo reconoce.
     const intruso = createServer((_req, res) => {
       res.writeHead(200)
-      res.end('no soy miniClaudio')
+      res.end('no soy Orbix')
     })
     await new Promise<void>((r) => intruso.listen(45341, '127.0.0.1', () => r()))
 

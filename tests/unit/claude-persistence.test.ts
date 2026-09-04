@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { CliUsage, type CliUsageResult } from '../../src/main/claude/cli-usage'
 import { ClaudeService } from '../../src/main/claude/service'
 import type { Db } from '../../src/main/db/connection'
 import { getMeta } from '../../src/main/db/meta'
@@ -43,7 +44,7 @@ function evt(name: string, extra: Record<string, unknown> = {}): NormalizedHookE
     JSON.stringify({
       hook_event_name: name,
       session_id: 'sess-1',
-      cwd: '/Users/icatala/Projects/propios/miniClaudio',
+      cwd: '/Users/icatala/Projects/propios/Orbix',
       ...extra
     })
   )
@@ -62,8 +63,8 @@ describe('SqliteHookEventSink', () => {
       ts: '2026-09-03T10:00:00.000Z',
       tsEpoch: 1_787_911_200_000,
       event: 'PostToolUse',
-      projectKey: '-Users-icatala-Projects-propios-miniClaudio',
-      projectPath: '/Users/icatala/Projects/propios/miniClaudio',
+      projectKey: '-Users-icatala-Projects-propios-Orbix',
+      projectPath: '/Users/icatala/Projects/propios/Orbix',
       sessionId: 'sess-1',
       message: null,
       reason: null,
@@ -78,7 +79,7 @@ describe('SqliteHookEventSink', () => {
     expect(row['is_error']).toBe(1)
     expect(row['pet_state']).toBe('puzzled')
     expect(row['tool_name']).toBe('Bash')
-    expect(row['project_key']).toBe('-Users-icatala-Projects-propios-miniClaudio')
+    expect(row['project_key']).toBe('-Users-icatala-Projects-propios-Orbix')
   })
 
   it('el router persiste TODO evento, también los que no producen estado', () => {
@@ -119,7 +120,7 @@ describe('ClaudeService', () => {
   let home: string
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), 'miniclaudio-home-'))
+    home = mkdtempSync(join(tmpdir(), 'orbix-home-'))
     writeFileSync(join(home, '.claude.json'), readFileSync(CLAUDE_FIXTURE, 'utf8'))
   })
 
@@ -324,8 +325,20 @@ describe('ClaudeService', () => {
     }
   }, 15_000)
 
-  it('el Nivel B está apagado y no configurado (punto abierto B2)', async () => {
-    const service = new ClaudeService({ db, home })
+  it('Nivel B sin el binario de claude: se degrada al Nivel A sin gastar peticiones', async () => {
+    // `isConfigured` inyectado a `false` (nunca depende de si ESTA máquina tiene
+    // `claude` instalado — de lo contrario el test pasaría en un Mac de desarrollo y
+    // fallaría en CI, o al revés). `fetchUsage` nunca debería ni llamarse: si lo
+    // hiciera, sería un proceso real lanzándose desde un test.
+    let fetchCalled = false
+    const levelB = new CliUsage({
+      isConfigured: () => false,
+      fetchUsage: async () => {
+        fetchCalled = true
+        return { ok: true, utilization: { limits: [] }, fetchedAtMs: Date.now() }
+      }
+    })
+    const service = new ClaudeService({ db, home, levelB })
     service.refresh(false)
 
     expect(service.levelBAvailable).toBe(false)
@@ -338,6 +351,66 @@ describe('ClaudeService', () => {
     // Y refrescar en vivo devuelve la vista del Nivel A tal cual: degradación silenciosa.
     const view = await service.refreshLive()
     expect(view.source).toBe('cache')
+    expect(fetchCalled).toBe(false)
+    await service.stop()
+  })
+
+  it('Nivel B con claude -p "/usage": refresca la vista con el texto real interpretado', async () => {
+    // Salida real capturada en la máquina de Ismael el 2026-09-04, ya pasada por
+    // `parseUsageOutput` (probado aparte en cli-usage.test.ts) — aquí solo importa que
+    // `ClaudeService` recoja el resultado y lo convierta en una `LimitsView` en vivo.
+    const okResult: CliUsageResult = {
+      ok: true,
+      fetchedAtMs: Date.parse('2026-09-04T08:34:45.083Z'),
+      utilization: {
+        limits: [
+          {
+            kind: 'session',
+            group: 'session',
+            percent: 39,
+            severity: 'normal',
+            resets_at: '2026-09-04T10:20:00.000Z',
+            scope: null,
+            is_active: false
+          },
+          {
+            kind: 'weekly_all',
+            group: 'weekly',
+            percent: 78,
+            severity: 'normal',
+            resets_at: '2026-09-06T08:00:00.000Z',
+            scope: null,
+            is_active: true
+          }
+        ]
+      }
+    }
+    const levelB = new CliUsage({
+      isConfigured: () => true,
+      fetchUsage: async () => okResult
+    })
+    const service = new ClaudeService({ db, home, levelB })
+    service.refresh(false)
+
+    expect(service.levelBAvailable).toBe(true)
+    const enable = await service.setLevelBEnabled(true)
+    expect(enable).toEqual({ enabled: true, verified: true })
+
+    const view = await service.refreshLive()
+    expect(view.source).toBe('live')
+    expect(view.stale).toBe(false)
+    expect(view.bars.map((b) => [b.kind, b.percent])).toEqual([
+      ['session', 39],
+      ['weekly_all', 78]
+    ])
+    expect(service.levelBStatus).toEqual({ enabled: true, lastResult: 'ok', lastError: null })
+
+    // Y el resultado en vivo se persiste en `limits_snapshots` igual que el del Nivel A.
+    const filas = db
+      .prepare("SELECT COUNT(*) AS n FROM limits_snapshots WHERE source = 'live'")
+      .get() as { n: number }
+    expect(filas.n).toBeGreaterThan(0)
+
     await service.stop()
   })
 })

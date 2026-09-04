@@ -1,5 +1,5 @@
 /**
- * miniClaudio — pestaña «Integración»: instalar y desinstalar los hooks.
+ * Orbix — pestaña «Integración»: instalar y desinstalar los hooks.
  * Fuente de verdad: docs/design/04-frontal.md §11.
  *
  * Es la pantalla que hace que la app sirva de algo: sin hooks se cuentan tokens
@@ -27,14 +27,14 @@ function explain(error: IpcError): { title: string; advice: string } {
           'Tu fichero no se ha tocado. Comprueba que ~/.claude/settings.json existe y ' +
           'tiene permiso de escritura, cierra cualquier editor que lo tenga abierto y ' +
           'vuelve a intentarlo. Si el fichero tiene un error de sintaxis JSON, ' +
-          'arréglalo primero: miniClaudio no sobrescribe un fichero que no entiende.'
+          'arréglalo primero: Orbix no sobrescribe un fichero que no entiende.'
       }
     case 'PORT_UNAVAILABLE':
       return {
         title: 'No hay puerto libre para el servidor de eventos',
         advice:
-          'Los hooks necesitan un puerto local para avisar a miniClaudio. Cierra la otra ' +
-          'copia de miniClaudio que pueda estar abierta y vuelve a intentarlo.'
+          'Los hooks necesitan un puerto local para avisar a Orbix. Cierra la otra ' +
+          'copia de Orbix que pueda estar abierta y vuelve a intentarlo.'
       }
     case 'NOT_READY':
       return {
@@ -51,11 +51,11 @@ function explain(error: IpcError): { title: string; advice: string } {
 
 const CONFIRM_HTML = `
 <div class="confirm" hidden>
-  <p class="confirm-title">miniClaudio va a modificar <code>~/.claude/settings.json</code></p>
+  <p class="confirm-title">Orbix va a modificar <code>~/.claude/settings.json</code></p>
   <ul class="confirm-list">
     <li>Antes de tocar nada se guarda una copia de seguridad del fichero.</li>
     <li data-f="foreign">Tus hooks de otros programas se conservan tal cual.</li>
-    <li>Se añade una sola orden: <code>~/.claude/miniclaudio/hook.sh</code>.</li>
+    <li>Se añade una sola orden: <code>~/.claude/orbix/hook.sh</code>.</li>
     <li>Puedes deshacerlo desde aquí mismo con «Desinstalar».</li>
   </ul>
   <div class="btn-bar">
@@ -128,7 +128,7 @@ export class IntegrationTab {
         'Hooks de Claude Code',
         this.#state,
         fromHtml<HTMLElement>(
-          `<p class="note">Los hooks son lo que le cuenta a miniClaudio qué está haciendo
+          `<p class="note">Los hooks son lo que le cuenta a Orbix qué está haciendo
            Claude Code. Sin ellos las cifras siguen saliendo, pero la mascota no reacciona.</p>`
         ),
         this.#foreign,

@@ -1,5 +1,5 @@
 /**
- * miniClaudio — helper tipado de `contextBridge`.
+ * Orbix — helper tipado de `contextBridge`.
  * Fuente de verdad: docs/design/01-arquitectura.md §3.1.
  *
  * Las cuatro ventanas corren con `sandbox: true`, `contextIsolation: true` y
@@ -15,7 +15,7 @@ import type {
   InvokeChannel,
   InvokeRequest,
   InvokeResponse,
-  MiniClaudioBridge,
+  OrbixBridge,
   PushChannel,
   PushPayload
 } from '@shared/ipc'
@@ -33,7 +33,7 @@ function denied<T>(channel: string): IpcResult<T> {
 }
 
 /**
- * Expone `window.miniClaudio` con la superficie mínima de esta ventana.
+ * Expone `window.Orbix` con la superficie mínima de esta ventana.
  *
  * @param invokeChannels canales `invoke` permitidos (renderer → main)
  * @param pushChannels   canales `push` permitidos (main → renderer)
@@ -45,7 +45,7 @@ export function exposeBridge(
   const allowedInvoke = new Set<string>(invokeChannels)
   const allowedPush = new Set<string>(pushChannels)
 
-  const bridge: MiniClaudioBridge = {
+  const bridge: OrbixBridge = {
     invoke<C extends InvokeChannel>(
       channel: C,
       request: InvokeRequest<C>
@@ -69,5 +69,5 @@ export function exposeBridge(
     }
   }
 
-  contextBridge.exposeInMainWorld('miniClaudio', bridge)
+  contextBridge.exposeInMainWorld('Orbix', bridge)
 }

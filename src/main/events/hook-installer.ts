@@ -1,5 +1,5 @@
 /**
- * miniClaudio — instalación y desinstalación de los hooks en `~/.claude/settings.json`.
+ * Orbix — instalación y desinstalación de los hooks en `~/.claude/settings.json`.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §5.
  *
@@ -52,7 +52,7 @@ import {
   INSTALL_LOCK_TIMEOUT_MS,
   LOCK_FILE,
   MAX_BACKUPS,
-  MINICLAUDIO_DIR_REL,
+  ORBIX_DIR_REL,
   MODE_DIR,
   MODE_PORT,
   MODE_SCRIPT,
@@ -102,7 +102,7 @@ export class HookWriteError extends Error {
 
 /**
  * Marca de identidad: una entrada es nuestra si y solo si su `command` contiene
- * `miniclaudio/hook.sh`. Nada más. No se usan claves extra en el JSON porque
+ * `orbix/hook.sh`. Nada más. No se usan claves extra en el JSON porque
  * Claude Code podría rechazarlas.
  */
 export function isOurEntry(entry: unknown): boolean {
@@ -235,7 +235,7 @@ export function countForeignHooks(settings: SettingsObject): number {
 export interface HookInstallerOptions {
   /** Raíz alternativa. Los tests SIEMPRE pasan un directorio temporal. */
   home?: string
-  /** Ruta del `miniclaudio-hook.sh` de origen. */
+  /** Ruta del `orbix-hook.sh` de origen. */
   hookSourcePath?: string
   now?: () => Date
 }
@@ -295,7 +295,7 @@ export class HookInstaller {
   }
 
   get dir(): string {
-    return join(this.home, MINICLAUDIO_DIR_REL)
+    return join(this.home, ORBIX_DIR_REL)
   }
 
   get scriptPath(): string {
@@ -315,7 +315,7 @@ export class HookInstaller {
   // -------------------------------------------------------------------------
 
   /**
-   * Crea `~/.claude/miniclaudio/` (0700), el token (0600) y copia el script (0755).
+   * Crea `~/.claude/orbix/` (0700), el token (0600) y copia el script (0755).
    * Es idempotente y NO toca `settings.json`: se puede llamar en cada arranque.
    */
   ensureRuntimeFiles(): { token: string; scriptInstalled: boolean } {
@@ -365,7 +365,7 @@ export class HookInstaller {
   }
 
   /**
-   * Reescribe `~/.claude/miniclaudio/port` con escritura atómica. Se llama en cuanto el
+   * Reescribe `~/.claude/orbix/port` con escritura atómica. Se llama en cuanto el
    * `listen` tiene éxito. NO se borra al salir: con la app cerrada, `curl` falla por
    * conexión rechazada, que es exactamente lo que queremos.
    */
@@ -386,11 +386,11 @@ export class HookInstaller {
     }
   }
 
-  /** Versión del script instalado, leída de `# miniclaudio-hook-version: N`. */
+  /** Versión del script instalado, leída de `# orbix-hook-version: N`. */
   readScriptVersion(): string | null {
     try {
       const head = readFileSync(this.scriptPath, 'utf8').slice(0, 512)
-      const match = /^#\s*miniclaudio-hook-version:\s*(\S+)\s*$/m.exec(head)
+      const match = /^#\s*orbix-hook-version:\s*(\S+)\s*$/m.exec(head)
       return match?.[1] ?? null
     } catch {
       return null
@@ -426,7 +426,7 @@ export class HookInstaller {
     return this.getStatus(server)
   }
 
-  /** Quita nuestras entradas. NO borra `~/.claude/miniclaudio/`: facilita reinstalar. */
+  /** Quita nuestras entradas. NO borra `~/.claude/orbix/`: facilita reinstalar. */
   async uninstall(server: ServerInfo): Promise<HookStatus> {
     await this.withLock(() => {
       const current = this.readSettingsOrThrow()
@@ -690,7 +690,7 @@ export function timestamp(date: Date): string {
 }
 
 /**
- * Localiza `miniclaudio-hook.sh`. En desarrollo está en el repo; empaquetado va en
+ * Localiza `orbix-hook.sh`. En desarrollo está en el repo; empaquetado va en
  * `asarUnpack` (ver `01-arquitectura.md` §7), fuera del asar, porque tiene que ser un
  * fichero real y ejecutable.
  */
@@ -699,24 +699,24 @@ export function defaultHookSourcePath(): string {
 
   const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath
   if (typeof resourcesPath === 'string' && resourcesPath.length > 0) {
-    candidates.push(join(resourcesPath, 'app.asar.unpacked', 'scripts', 'hook', 'miniclaudio-hook.sh'))
-    candidates.push(join(resourcesPath, 'scripts', 'hook', 'miniclaudio-hook.sh'))
+    candidates.push(join(resourcesPath, 'app.asar.unpacked', 'scripts', 'hook', 'orbix-hook.sh'))
+    candidates.push(join(resourcesPath, 'scripts', 'hook', 'orbix-hook.sh'))
   }
 
   try {
     // `out/main/index.js` → raíz del proyecto empaquetado o del repo en dev.
     const here = dirname(fileURLToPath(import.meta.url))
-    candidates.push(resolve(here, '../../scripts/hook/miniclaudio-hook.sh'))
-    candidates.push(resolve(here, '../../../scripts/hook/miniclaudio-hook.sh'))
+    candidates.push(resolve(here, '../../scripts/hook/orbix-hook.sh'))
+    candidates.push(resolve(here, '../../../scripts/hook/orbix-hook.sh'))
   } catch {
     // `import.meta.url` no disponible (CJS de test): seguimos con el cwd.
   }
 
-  candidates.push(resolve(process.cwd(), 'scripts/hook/miniclaudio-hook.sh'))
+  candidates.push(resolve(process.cwd(), 'scripts/hook/orbix-hook.sh'))
 
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate
   }
   // Ninguno existe: devolvemos el más probable para que el error diga la ruta real.
-  return candidates[candidates.length - 1] ?? 'scripts/hook/miniclaudio-hook.sh'
+  return candidates[candidates.length - 1] ?? 'scripts/hook/orbix-hook.sh'
 }

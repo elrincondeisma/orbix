@@ -1,5 +1,5 @@
 /**
- * miniClaudio — resolución de rutas de renderers y preloads.
+ * Orbix — resolución de rutas de renderers y preloads.
  *
  * En desarrollo, `electron-vite` sirve los renderers por HTTP y deja los preloads
  * ya compilados en `out/preload`. En producción todo vive dentro del asar.

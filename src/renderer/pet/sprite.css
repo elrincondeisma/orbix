@@ -1,5 +1,5 @@
 /*
- * miniClaudio — núcleo de IA: presentación y animación.
+ * Orbix — núcleo de IA: presentación y animación.
  * Arte: `resources/pet/`. Geometría medida: ver cabecera de `sprite.ts`.
  *
  * REGLA: toda la animación vive aquí, bajo `[data-state]`. `main.ts` solo cambia
@@ -951,18 +951,27 @@ body[data-anchor='top-right'] #stage {
 /* ------------------------------------------------------------------ */
 
 #mc-bubble {
+  /*
+   * Escala propia del bocadillo (Ismael, 2026-09-04): "el icono me gusta el
+   * tamaño, el texto casi no se ve". A --mc-scale = 0,5 el texto quedaba en
+   * 6,5 px. --mc-bubble-scale nunca baja de 1: el bocadillo no encoge por
+   * debajo de su tamaño normal aunque el núcleo sea pequeño, pero sí crece
+   * junto a él si --mc-scale > 1. El pico de abajo sigue con --mc-scale: tiene
+   * que apuntar al núcleo real, sea del tamaño que sea.
+   */
+  --mc-bubble-scale: max(1, var(--mc-scale));
   flex: none;
   position: relative;
-  max-width: calc(280px * var(--mc-scale));
-  min-width: calc(90px * var(--mc-scale));
+  max-width: calc(280px * var(--mc-bubble-scale));
+  min-width: calc(90px * var(--mc-bubble-scale));
   margin: 0 calc(6px * var(--mc-scale));
-  padding: calc(9px * var(--mc-scale)) calc(13px * var(--mc-scale));
+  padding: calc(9px * var(--mc-bubble-scale)) calc(13px * var(--mc-bubble-scale));
   border: 1px solid var(--mc-bubble-edge);
-  border-radius: calc(14px * var(--mc-scale));
+  border-radius: calc(14px * var(--mc-bubble-scale));
   background: var(--mc-bubble-bg);
   backdrop-filter: blur(12px);
   color: var(--mc-bubble-fg);
-  font-size: calc(13px * var(--mc-scale));
+  font-size: calc(13px * var(--mc-bubble-scale));
   font-weight: 500;
   line-height: 1.35;
   opacity: 0;

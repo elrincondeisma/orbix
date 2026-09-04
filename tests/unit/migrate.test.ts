@@ -109,8 +109,8 @@ describe('migraciones', () => {
   })
 
   it('hace copia de seguridad antes de migrar una BD existente', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'miniclaudio-db-'))
-    const file = join(dir, 'miniclaudio.db')
+    const dir = mkdtempSync(join(tmpdir(), 'orbix-db-'))
+    const file = join(dir, 'orbix.db')
 
     let db = openDatabase(file)
     migrate(db, MIGRATIONS.slice(0, 1)) // solo hasta la v1
@@ -167,7 +167,7 @@ describe('migraciones', () => {
   })
 
   it('aplica los PRAGMA de conexión', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'miniclaudio-db-'))
+    const dir = mkdtempSync(join(tmpdir(), 'orbix-db-'))
     const db = openDatabase(join(dir, 'p.db'))
     expect((db.pragma('journal_mode') as Array<{ journal_mode: string }>)[0]?.journal_mode).toBe(
       'wal'

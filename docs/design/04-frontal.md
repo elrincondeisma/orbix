@@ -1,4 +1,4 @@
-# miniClaudio — 04. Diseño de frontal
+# Orbix — 04. Diseño de frontal
 
 > Especificación visual y de comportamiento. La implementa `frontend-dev`.
 > Todo lo que aquí se dibuja se alimenta de los contratos de `01-arquitectura.md` §3.
@@ -237,7 +237,7 @@ export interface PetRenderer {
 keyframes es la implementación de `PetRenderer`. `src/renderer/pet/main.ts` solo hace:
 
 ```
-window.miniClaudio.onPetCommand(cmd => {
+window.Orbix.onPetCommand(cmd => {
   if (cmd.seq <= lastSeq) return
   lastSeq = cmd.seq
   renderer.setState(cmd.state, { intensity: cmd.intensity })
@@ -553,9 +553,9 @@ con `blur`, con `Escape` y con un segundo clic en el icono.
 
 ```
 ┌────────────────────────────────────────────┐
-│ ● miniClaudio                     Max 20×  │  ← estado + plan
+│ ● Orbix                     Max 20×  │  ← estado + plan
 ├────────────────────────────────────────────┤
-│  SESIÓN ACTUAL · miniClaudio               │  ← 11px, mayúsculas, --ui-fg-dim
+│  SESIÓN ACTUAL · Orbix               │  ← 11px, mayúsculas, --ui-fg-dim
 │  $12,84                        1,2 M tok   │  ← 28px / 12px
 │  activa hace 2 min                         │  ← 11px, --ui-fg-dim
 ├────────────────────────────────────────────┤
@@ -724,7 +724,7 @@ Ventana normal de 520×620, no redimensionable, con pestañas de texto en la par
 - Zona horaria (solo lectura, con botón «recalcular histórico» si se cambia)
 - Tabla de precios por modelo, editable, con `valid_from` (F2)
 - Nivel B: interruptor «Refrescar límites por mi cuenta», con el texto exacto:
-  *«miniClaudio leerá tu token de Claude Code del llavero para consultar tu uso real. Usa
+  *«Orbix leerá tu token de Claude Code del llavero para consultar tu uso real. Usa
   una API interna no documentada: si deja de funcionar, se volverá al dato en caché sin
   avisar.»* Debajo, el último resultado y su error si lo hubo.
 - Estado de la BD: ruta, tamaño, nº de peticiones, versión de esquema, botones

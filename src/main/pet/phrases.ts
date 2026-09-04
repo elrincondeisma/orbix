@@ -1,5 +1,5 @@
 /**
- * miniClaudio — textos del bocadillo.
+ * Orbix — textos del bocadillo.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §6.4.
  * En español, con variantes elegidas al azar para que no canse.
@@ -19,14 +19,45 @@ export const PHRASES: Readonly<Partial<Record<PetState, readonly string[]>>> = O
   [PetState.WAKING]: ['Hola 👋 {p}', 'A trabajar en {p}', 'Aquí estamos, {p}'],
   [PetState.DONE]: ['{p} — listo', 'Terminado en {p}', 'Ya está, {p}'],
   [PetState.NEEDS_YOU]: ['{m}'],
+  // CODING y RUNNING solo tienen una herramienta de verdad relevante cada uno
+  // (escribir / ejecutar), así que un único verbo basta. THINKING es distinto:
+  // agrupa lectura, búsqueda, coordinación de agentes y "acabo de recibir un
+  // prompt", así que su texto se decide por herramienta en `phraseFor` — ver
+  // `THINKING_VERBS` más abajo.
+  [PetState.CODING]: ['{p}: escribiendo código…'],
+  [PetState.RUNNING]: ['{p}: ejecutando comandos…'],
   [PetState.PUZZLED]: ['Hmm… {t} ha fallado', 'Algo ha petado en {t}'],
   [PetState.COMPACTING]: ['Memoria llena, compactando…'],
-  [PetState.SUBAGENT_DONE]: ['Agente listo', 'Subagente terminado'],
+  // SUBAGENT_DONE: sin entrada a propósito, no habla. El tinte esmeralda y el
+  // satélite dando la vuelta ya lo reflejan de forma ambiental; un subagente
+  // terminando su turno no merece bocadillo (ver [[preferencia sobre ruido de
+  // notificaciones]] — Ismael, 2026-09-04: solo NEEDS_YOU y DONE del agente
+  // principal deben "avisar" de verdad).
   [PetState.WORRIED]: ['Semanal al {n} %', 'Ojo, semanal al {n} %']
 })
 
 /** Respaldo de `NEEDS_YOU` cuando Claude Code no manda `message`. */
 export const NEEDS_YOU_FALLBACK = '{p} te necesita'
+
+/**
+ * Verbo de `THINKING` según la herramienta en curso (Ismael, 2026-09-04: quería
+ * mensajes tipo «PROYECTO: inspeccionando código…», con la herramienta real detrás
+ * del verbo, no un «pensando…» genérico todo el rato).
+ *
+ * Claves en minúscula, igual que `classifyTool` de `tool-classes.ts`. Sin entrada
+ * (prompt recién recibido, o una herramienta desconocida/MCP) → `THINKING_FALLBACK`.
+ */
+const THINKING_VERBS: Readonly<Record<string, string>> = Object.freeze({
+  read: 'inspeccionando código…',
+  grep: 'buscando…',
+  glob: 'buscando…',
+  webfetch: 'buscando en la web…',
+  websearch: 'buscando en la web…',
+  task: 'coordinando un agente…',
+  todowrite: 'actualizando tareas…'
+})
+
+const THINKING_FALLBACK = 'pensando…'
 
 export interface PhraseVars {
   /** Nombre del proyecto. Siempre hay uno: `'Claude'` como último recurso. */
@@ -66,6 +97,12 @@ export function phraseFor(
     const real = (vars.message ?? '').trim()
     const text = real.length > 0 ? real : fill(NEEDS_YOU_FALLBACK, vars)
     return clip(text)
+  }
+
+  // THINKING: el verbo depende de qué herramienta lo disparó, no del estado en sí.
+  if (state === PetState.THINKING) {
+    const verb = vars.tool ? (THINKING_VERBS[vars.tool.toLowerCase()] ?? THINKING_FALLBACK) : THINKING_FALLBACK
+    return clip(fill(`{p}: ${verb}`, vars))
   }
 
   const variants = PHRASES[state]

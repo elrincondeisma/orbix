@@ -1,5 +1,5 @@
 /**
- * miniClaudio — lectura de `~/.claude.json`: plan y límites cacheados (Nivel A).
+ * Orbix — lectura de `~/.claude.json`: plan y límites cacheados (Nivel A).
  *
  * Fuente de verdad: `docs/design/02-esquema-bd.md` §6.
  *

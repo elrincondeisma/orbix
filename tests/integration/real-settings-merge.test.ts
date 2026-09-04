@@ -7,7 +7,7 @@
  *
  * No corre por defecto (depende de la máquina). Para lanzarla:
  *
- *   MINICLAUDIO_REAL=1 npx vitest run tests/integration/real-settings-merge.test.ts
+ *   ORBIX_REAL=1 npx vitest run tests/integration/real-settings-merge.test.ts
  */
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -26,7 +26,7 @@ import {
 } from '../../src/main/events/hook-installer'
 import { HOOK_EVENTS_ALL } from '../../src/shared/constants'
 
-const ENABLED = process.env['MINICLAUDIO_REAL'] === '1'
+const ENABLED = process.env['ORBIX_REAL'] === '1'
 const SETTINGS = join(homedir(), '.claude/settings.json')
 
 interface Entrada {
@@ -56,10 +56,10 @@ describe.skipIf(!ENABLED)('merge contra el settings.json real (solo lectura)', (
 
   it('instalar EN MEMORIA no pierde ni un solo hook del usuario', () => {
     const original = JSON.parse(readFileSync(SETTINGS, 'utf8')) as SettingsObject
-    const antes = entradas(original).filter((e) => !e.comando.includes('miniclaudio/hook.sh'))
+    const antes = entradas(original).filter((e) => !e.comando.includes('orbix/hook.sh'))
 
     const conNuestros = mergeHooks(original, HOOK_EVENTS_ALL)
-    const despues = entradas(conNuestros).filter((e) => !e.comando.includes('miniclaudio/hook.sh'))
+    const despues = entradas(conNuestros).filter((e) => !e.comando.includes('orbix/hook.sh'))
 
     // Mismos comandos, mismos eventos, mismo orden.
     expect(despues).toEqual(antes)

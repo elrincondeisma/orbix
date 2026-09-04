@@ -1,5 +1,5 @@
 /**
- * miniClaudio — popover del menubar.
+ * Orbix — popover del menubar.
  * Fuente de verdad: docs/design/04-frontal.md §10.2 y §10.7.
  *
  * Ancho fijo de 340 px; el alto se ajusta al contenido con un techo del 70 % del

@@ -1,5 +1,5 @@
 /**
- * miniClaudio — desgloses «Por proyecto» y «Por modelo».
+ * Orbix — desgloses «Por proyecto» y «Por modelo».
  * Fuente de verdad: docs/design/04-frontal.md §10.3, §10.6 y §10.7.
  *
  * No se pide nada hasta desplegar: el popover se abre y se cierra muchas veces al

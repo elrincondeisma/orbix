@@ -1,5 +1,5 @@
 -- ============================================================
--- miniClaudio · origen de cada rollup y regla de rescate · versión 4
+-- Orbix · origen de cada rollup y regla de rescate · versión 4
 -- ============================================================
 -- Decisión de producto (2026-09-03): el snapshot SOLO RELLENA HUECOS.
 --

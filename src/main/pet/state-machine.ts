@@ -1,5 +1,5 @@
 /**
- * miniClaudio — máquina de estados de la mascota.
+ * Orbix — máquina de estados de la mascota.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §6 (mapa evento → PetState,
  * prioridades, resolución de eventos que se pisan) y `04-frontal.md` §8.2 (cuándo NO suena).

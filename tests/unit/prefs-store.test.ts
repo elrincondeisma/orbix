@@ -20,7 +20,7 @@ let dir: string
 let file: string
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'miniclaudio-prefs-'))
+  dir = mkdtempSync(join(tmpdir(), 'orbix-prefs-'))
   file = prefsPath(dir)
 })
 

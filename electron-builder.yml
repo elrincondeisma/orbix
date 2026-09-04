@@ -1,12 +1,12 @@
-# miniClaudio — electron-builder
+# Orbix — electron-builder
 #
 # Fuente de verdad: docs/design/01-arquitectura.md §7.
 #
 # PUNTO ABIERTO A1 (sin resolver): sin firmar ni notarizar. Es para el Mac de Ismael;
 # si algún día se distribuye fuera hará falta Developer ID + notarización.
 
-appId: com.icatala.miniclaudio
-productName: miniClaudio
+appId: com.icatala.orbix
+productName: Orbix
 copyright: © 2026 Ismael Catalá
 
 directories:
@@ -17,12 +17,12 @@ files:
   - out/**/*
   - resources/trayTemplate.png
   - resources/trayTemplate@2x.png
-  - scripts/hook/miniclaudio-hook.sh
+  - scripts/hook/orbix-hook.sh
   - data/snapshot-*.json
 
 # better-sqlite3 es un módulo nativo (.node): no carga desde dentro del asar.
 # El hook tiene que quedar como fichero real y ejecutable (lo copia hook-installer.ts
-# a ~/.claude/miniclaudio/), tampoco puede vivir dentro del asar.
+# a ~/.claude/orbix/), tampoco puede vivir dentro del asar.
 asarUnpack:
   - "**/*.node"
   - "scripts/hook/**"
@@ -40,7 +40,7 @@ mac:
     NSHumanReadableCopyright: © 2026 Ismael Catalá
 
 dmg:
-  title: miniClaudio ${version}
+  title: Orbix ${version}
   contents:
     - { x: 130, y: 220, type: file }
     - { x: 410, y: 220, type: link, path: /Applications }

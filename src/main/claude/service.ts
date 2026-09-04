@@ -1,5 +1,5 @@
 /**
- * miniClaudio — servicio de plan y límites (Nivel A, con Nivel B opcional).
+ * Orbix — servicio de plan y límites (Nivel A, con Nivel B opcional).
  *
  * Junta cuatro cosas que hasta ahora estaban sueltas:
  *  - lectura de `~/.claude.json` (`config-reader.ts`),
@@ -33,7 +33,7 @@ import {
   type ClaudeAccountMeta,
   type PlanRow
 } from './config-reader'
-import { LiveUsage, isConfigured } from './live-usage'
+import { CliUsage } from './cli-usage'
 
 export interface ClaudeServiceOptions {
   db: Db
@@ -43,6 +43,13 @@ export interface ClaudeServiceOptions {
   /** Porcentaje semanal, para la regla 13 de la mascota (`WORRIED`). */
   onWeeklyPercent?: (percent: number | null) => void
   onError?: (error: unknown) => void
+  /**
+   * Inyectable en tests. Sin esto, cualquier test que llame a `refreshLive()` en una
+   * máquina con `claude` instalado (cualquier máquina de desarrollo de este proyecto)
+   * lanzaría de verdad `claude -p "/usage"` — un proceso real, gastando una petición de
+   * la suscripción en cada pasada de `npm test`. Por defecto, `new CliUsage()`.
+   */
+  levelB?: CliUsage
 }
 
 export class ClaudeService {
@@ -52,7 +59,7 @@ export class ClaudeService {
   private readonly onWeeklyPercent: (percent: number | null) => void
   private readonly onError: (error: unknown) => void
 
-  private readonly levelB = new LiveUsage()
+  private readonly levelB: CliUsage
 
   private meta: ClaudeAccountMeta | null = null
   private cache: CachedUsage = { fetchedAtMs: null, utilization: null }
@@ -75,6 +82,7 @@ export class ClaudeService {
     this.onLimits = options.onLimits ?? ((): void => {})
     this.onWeeklyPercent = options.onWeeklyPercent ?? ((): void => {})
     this.onError = options.onError ?? ((): void => {})
+    this.levelB = options.levelB ?? new CliUsage()
   }
 
   get plan(): PlanInfo {
@@ -223,7 +231,7 @@ export class ClaudeService {
   }
 
   get levelBAvailable(): boolean {
-    return isConfigured()
+    return this.levelB.available
   }
 
   /**

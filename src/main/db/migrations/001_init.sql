@@ -1,5 +1,5 @@
 -- ============================================================
--- miniClaudio · esquema inicial · versión 1
+-- Orbix · esquema inicial · versión 1
 -- Fiel a docs/design/02-esquema-bd.md §2.
 -- El runner envuelve este fichero en una transacción: no lleva BEGIN/COMMIT.
 -- ============================================================
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS meta (
 -- ---------- cursor de ingesta, uno por fichero JSONL ----------
 CREATE TABLE IF NOT EXISTS ingest_files (
   path             TEXT PRIMARY KEY,          -- ruta absoluta
-  project_key      TEXT NOT NULL,             -- '-Users-icatala-Projects-propios-miniClaudio'
+  project_key      TEXT NOT NULL,             -- '-Users-icatala-Projects-propios-Orbix'
   session_id       TEXT,                      -- uuid del nombre de fichero o del contenido
   is_sidechain     INTEGER NOT NULL DEFAULT 0 CHECK (is_sidechain IN (0,1)),
   dev              INTEGER,                   -- stat.dev
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS plans (
 -- ---------- histórico de límites (Nivel A y B) ----------
 CREATE TABLE IF NOT EXISTS limits_snapshots (
   id             INTEGER PRIMARY KEY,
-  captured_at    TEXT    NOT NULL,   -- cuándo lo leyó miniClaudio
+  captured_at    TEXT    NOT NULL,   -- cuándo lo leyó Orbix
   fetched_at_ms  INTEGER,            -- cachedUsageUtilization.fetchedAtMs (Nivel A)
   source         TEXT    NOT NULL CHECK (source IN ('cache','live')),
   five_hour_pct  REAL,

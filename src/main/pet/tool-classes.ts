@@ -1,5 +1,5 @@
 /**
- * miniClaudio — clasificación de herramientas de Claude Code.
+ * Orbix — clasificación de herramientas de Claude Code.
  *
  * Fuente de verdad: `docs/design/03-contrato-eventos.md` §6.1.
  *

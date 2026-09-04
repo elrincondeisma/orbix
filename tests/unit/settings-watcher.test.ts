@@ -23,13 +23,13 @@ import type { HookStatus } from '../../src/shared/types'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = join(HERE, '../..')
 const FIXTURE = join(REPO, 'tests/fixtures/claude/settings-real.json')
-const HOOK_SOURCE = join(REPO, 'scripts/hook/miniclaudio-hook.sh')
+const HOOK_SOURCE = join(REPO, 'scripts/hook/orbix-hook.sh')
 
 let home: string
 let installer: HookInstaller
 
 beforeEach(() => {
-  home = mkdtempSync(join(tmpdir(), 'miniclaudio-watch-'))
+  home = mkdtempSync(join(tmpdir(), 'orbix-watch-'))
   mkdirSync(join(home, '.claude'), { recursive: true })
   writeFileSync(join(home, '.claude/settings.json'), readFileSync(FIXTURE, 'utf8'))
   installer = new HookInstaller({ home, hookSourcePath: HOOK_SOURCE })

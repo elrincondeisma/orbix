@@ -1,5 +1,5 @@
 /**
- * miniClaudio — pestaña «General».
+ * Orbix — pestaña «General».
  * Fuente de verdad: docs/design/04-frontal.md §11.
  */
 
@@ -42,7 +42,7 @@ export class GeneralTab {
      */
     this.#launch = switchRow(
       'Abrir al iniciar sesión',
-      'miniClaudio vive en la barra de menús, sin ventana propia. Con esto activado ' +
+      'Orbix vive en la barra de menús, sin ventana propia. Con esto activado ' +
         'la mascota aparece sola al encender el Mac y la contabilidad no se salta ningún día.',
       (v) => patch({ launchAtLogin: v })
     )
@@ -90,7 +90,7 @@ export class GeneralTab {
       this.#launchNote.className = 'note'
       setText(
         this.#launchNote,
-        'Solo se puede activar en la app instalada. Ahora mismo miniClaudio corre desde ' +
+        'Solo se puede activar en la app instalada. Ahora mismo Orbix corre desde ' +
           'el proyecto, y registrar el arranque dejaría en tus Elementos de inicio una ' +
           'entrada apuntando al Electron de node_modules. Se deja desactivado a propósito ' +
           'para no tocarte esa lista.'

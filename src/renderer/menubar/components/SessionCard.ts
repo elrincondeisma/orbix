@@ -1,5 +1,5 @@
 /**
- * miniClaudio — bloque «Sesión actual».
+ * Orbix — bloque «Sesión actual».
  * Fuente de verdad: docs/design/04-frontal.md §10.3 y §10.6.
  */
 

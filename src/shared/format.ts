@@ -1,5 +1,5 @@
 /**
- * miniClaudio — formateo de cifras para pantalla.
+ * Orbix — formateo de cifras para pantalla.
  *
  * Fuente de verdad: `docs/design/04-frontal.md` §10.4. Locale fijo `es-ES`.
  * **Ambas partes (menubar y stats) usan estas funciones; no se formatea a mano

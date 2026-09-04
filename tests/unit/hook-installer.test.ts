@@ -30,7 +30,7 @@ import { HOOK_EVENTS_ALL, HOOK_EVENTS_PLAIN } from '../../src/shared/constants'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = join(HERE, '../..')
 const FIXTURE = join(REPO, 'tests/fixtures/claude/settings-real.json')
-const HOOK_SOURCE = join(REPO, 'scripts/hook/miniclaudio-hook.sh')
+const HOOK_SOURCE = join(REPO, 'scripts/hook/orbix-hook.sh')
 
 function loadFixture(): SettingsObject {
   return JSON.parse(readFileSync(FIXTURE, 'utf8')) as SettingsObject
@@ -60,7 +60,7 @@ describe('mergeHooks — no destruye los hooks existentes del usuario', () => {
     const after = mergeHooks(before, HOOK_EVENTS_ALL)
 
     const foreignBefore = allCommands(before)
-    const foreignAfter = allCommands(after).filter((c) => !c.includes('miniclaudio/hook.sh'))
+    const foreignAfter = allCommands(after).filter((c) => !c.includes('orbix/hook.sh'))
 
     expect(foreignAfter).toEqual(foreignBefore)
     expect(foreignAfter).toContain('~/.claude/hooks/ntfy-notify.sh')
@@ -94,7 +94,7 @@ describe('mergeHooks — no destruye los hooks existentes del usuario', () => {
     expect(last.hooks).toHaveLength(1)
     expect(last.hooks[0]).toEqual({
       type: 'command',
-      command: '~/.claude/miniclaudio/hook.sh',
+      command: '~/.claude/orbix/hook.sh',
       timeout: 2,
       async: true
     })
@@ -119,7 +119,7 @@ describe('mergeHooks — no destruye los hooks existentes del usuario', () => {
     const once = mergeHooks(loadFixture(), HOOK_EVENTS_ALL)
     const twice = mergeHooks(once, HOOK_EVENTS_ALL)
     expect(twice).toEqual(once)
-    expect(allCommands(twice).filter((c) => c.includes('miniclaudio'))).toHaveLength(9)
+    expect(allCommands(twice).filter((c) => c.includes('orbix'))).toHaveLength(9)
   })
 
   it('al desactivar los estados detallados quita PreToolUse/PostToolUse y nada más', () => {
@@ -169,8 +169,8 @@ describe('stripHooks — desinstalación', () => {
 
 describe('isOurEntry / countForeignHooks', () => {
   it('la marca de identidad es únicamente la subcadena del comando', () => {
-    expect(isOurEntry({ command: '~/.claude/miniclaudio/hook.sh' })).toBe(true)
-    expect(isOurEntry({ command: '/otra/ruta/miniclaudio/hook.sh --x' })).toBe(true)
+    expect(isOurEntry({ command: '~/.claude/orbix/hook.sh' })).toBe(true)
+    expect(isOurEntry({ command: '/otra/ruta/orbix/hook.sh --x' })).toBe(true)
     expect(isOurEntry({ command: '~/.claude/hooks/ntfy-notify.sh' })).toBe(false)
     expect(isOurEntry({ command: 'cerebro hook cierre' })).toBe(false)
     expect(isOurEntry(null)).toBe(false)
@@ -200,7 +200,7 @@ describe('HookInstaller sobre una copia real de settings.json', () => {
   const server = { port: 41414, listening: true }
 
   beforeEach(() => {
-    home = mkdtempSync(join(tmpdir(), 'miniclaudio-test-'))
+    home = mkdtempSync(join(tmpdir(), 'orbix-test-'))
     mkdirSync(join(home, '.claude'), { recursive: true })
     writeFileSync(join(home, '.claude/settings.json'), readFileSync(FIXTURE, 'utf8'))
     installer = new HookInstaller({ home, hookSourcePath: HOOK_SOURCE })
@@ -254,7 +254,7 @@ describe('HookInstaller sobre una copia real de settings.json', () => {
     await installer.install(server)
     await installer.install(server)
     const after = JSON.parse(readFileSync(installer.settingsPath, 'utf8')) as SettingsObject
-    expect(allCommands(after).filter((c) => c.includes('miniclaudio'))).toHaveLength(9)
+    expect(allCommands(after).filter((c) => c.includes('orbix'))).toHaveLength(9)
   })
 
   it('desinstala dejando el fichero como estaba', async () => {
@@ -293,7 +293,7 @@ describe('HookInstaller sobre una copia real de settings.json', () => {
       await inst.install(server)
     }
     const backups = readdirSync(join(home, '.claude')).filter((n) =>
-      n.startsWith('settings.json.miniclaudio-bak-')
+      n.startsWith('settings.json.orbix-bak-')
     )
     expect(backups).toHaveLength(5)
   })
@@ -301,7 +301,7 @@ describe('HookInstaller sobre una copia real de settings.json', () => {
   it('no deja ficheros temporales ni el lock por el camino', async () => {
     await installer.install(server)
     const claudeDir = readdirSync(join(home, '.claude'))
-    expect(claudeDir.some((n) => n.endsWith('.miniclaudio-tmp'))).toBe(false)
+    expect(claudeDir.some((n) => n.endsWith('.orbix-tmp'))).toBe(false)
     expect(existsSync(join(installer.dir, '.lock'))).toBe(false)
   })
 

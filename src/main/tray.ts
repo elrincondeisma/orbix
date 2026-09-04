@@ -1,5 +1,5 @@
 /**
- * miniClaudio — icono de la barra de menús.
+ * Orbix — icono de la barra de menús.
  *
  * Fuente de verdad: `04-frontal.md` §10.1.
  *
@@ -85,7 +85,7 @@ export class AppTray {
   create(): void {
     if (this.#tray !== null) return
     const tray = new Tray(trayImage())
-    tray.setToolTip('miniClaudio')
+    tray.setToolTip('Orbix')
 
     // OJO: no se usa `setContextMenu`, porque en macOS eso haría que el clic izquierdo
     // abriera el menú en vez del popover.
@@ -144,7 +144,7 @@ export class AppTray {
         ]
       },
       { type: 'separator' },
-      { label: 'Salir de miniClaudio', click: () => this.#callbacks.onQuit() }
+      { label: 'Salir de Orbix', click: () => this.#callbacks.onQuit() }
     ])
   }
 }

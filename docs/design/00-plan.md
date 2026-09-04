@@ -1,4 +1,4 @@
-# miniClaudio — Plan de proyecto
+# Orbix — Plan de proyecto
 
 > Fuente de verdad para el equipo. Fecha: 2026-09-03.
 
@@ -100,7 +100,7 @@ cachedUsageUtilization.utilization.limits[]
       │                                              ▼
       │                                    ┌──────────────────┐
       ├─ ~/.claude/projects/*.jsonl ──────►│                  │
-      │  (watcher incremental por offset)  │   miniClaudio    │
+      │  (watcher incremental por offset)  │   Orbix    │
       │                                    │    (Electron)    │
       └─ ~/.claude.json ──────────────────►│                  │
          (plan + límites)                  └────────┬─────────┘

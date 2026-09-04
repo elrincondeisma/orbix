@@ -1,5 +1,5 @@
 /**
- * miniClaudio — superficie IPC del panel de estadísticas.
+ * Orbix — superficie IPC del panel de estadísticas.
  *
  * Espejo en tiempo de compilación de la lista blanca de `src/preload/stats.ts`.
  */
@@ -7,8 +7,8 @@
 import { unwrap } from '@shared/ipc'
 import type { Breakdown, PeriodKey, Prefs, Series, StatsSnapshot } from '@shared/types'
 
-function bridge(): NonNullable<Window['miniClaudio']> | null {
-  return window.miniClaudio ?? null
+function bridge(): NonNullable<Window['Orbix']> | null {
+  return window.Orbix ?? null
 }
 
 export async function getSnapshot(): Promise<StatsSnapshot> {

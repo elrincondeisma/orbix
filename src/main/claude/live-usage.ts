@@ -1,5 +1,5 @@
 /**
- * miniClaudio — Nivel B (opt-in): refresco de límites contra la API interna de uso.
+ * Orbix — Nivel B (opt-in): refresco de límites contra la API interna de uso.
  *
  * ⚠️ **PUNTO ABIERTO B2 — la URL del endpoint NO SE INVENTA.** Está sin descubrir: hay que
  * observar el tráfico de Claude Code (mitmproxy con `NODE_EXTRA_CA_CERTS`, o `HTTPS_PROXY`

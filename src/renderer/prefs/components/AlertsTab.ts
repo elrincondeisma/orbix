@@ -1,5 +1,5 @@
 /**
- * miniClaudio — pestaña «Avisos»: bocadillos, sonido y silencio.
+ * Orbix — pestaña «Avisos»: bocadillos, sonido y silencio.
  * Fuente de verdad: docs/design/04-frontal.md §11 y §8.2.
  */
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- miniClaudio · rollups importados de snapshot · versión 3
+-- Orbix · rollups importados de snapshot · versión 3
 -- ============================================================
 -- Claude Code borra los transcripts a los 30 días, así que el histórico vivo es
 -- incompleto. `data/snapshot-*.json` (schema miniclaudio.snapshot/2) trae rollups

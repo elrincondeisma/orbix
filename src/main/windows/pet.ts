@@ -1,5 +1,5 @@
 /**
- * miniClaudio — ventana de la mascota.
+ * Orbix — ventana de la mascota.
  * Fuente de verdad: docs/design/04-frontal.md §3.
  *
  * Transparente, sin marco, sin sombra, sin foco y por encima de todo. Por defecto
@@ -24,8 +24,30 @@ import { loadRenderer, preloadPath } from './paths'
 const BASE_WIDTH = 340
 const BASE_HEIGHT = 270
 
-/** Margen respecto al borde del área de trabajo. */
+/**
+ * El núcleo mide 160 px a escala 1 (sprite.css #mc-pet). El resto de `BASE_HEIGHT`
+ * (110 px: separación + bocadillo de hasta 3 líneas + pico) es el hueco del
+ * bocadillo, que a partir de 2026-09-04 tiene su propia escala — `--mc-bubble-scale`
+ * en sprite.css, nunca por debajo de 1× aunque el núcleo encoja — para que el texto
+ * siga siendo legible con la mascota pequeña. Si el tamaño de la ventana solo
+ * siguiera a `petScale`, a 0,5× la ventana medía 135 px y el bocadillo (que ya no
+ * encoge con ella) se salía por arriba, cortado.
+ */
+const ICON_BASE = 160
+const BUBBLE_ZONE_H = BASE_HEIGHT - ICON_BASE
+/** Igual que `--mc-bubble-scale: max(1, var(--mc-scale))` en sprite.css. */
+const BUBBLE_SCALE_FLOOR = 1
+
+/** Margen respecto al borde del área de trabajo, en horizontal y en el borde "libre". */
 const MARGIN = 16
+
+/**
+ * Margen respecto al borde pegado al Dock/barra de menús (Ismael, 2026-09-04: quiere
+ * la mascota "completamente a la altura de la barra de apps", sin el hueco de antes).
+ * `workArea` ya excluye el Dock y la barra de menús, así que 0 la deja justo pegada
+ * a su borde, no debajo ni tapada por él.
+ */
+const MARGIN_DOCK_EDGE = 0
 
 /**
  * Sondeo del cursor para seguir a la pantalla activa. Se compara solo el `id` del
@@ -207,7 +229,7 @@ export class PetWindow {
     if (!this.isOpen) return
     const display = this.#targetDisplay()
     this.#followingDisplayId = display.id
-    const bounds = this.#boundsFor(display.workArea, this.#prefs.corner)
+    const bounds = this.#boundsFor(display, this.#prefs.corner)
     this.#win?.setBounds(bounds)
   }
 
@@ -221,10 +243,14 @@ export class PetWindow {
   // -----------------------------------------------------------------
 
   #size(): { width: number; height: number } {
-    const scale = this.#prefs.petScale
+    const iconScale = this.#prefs.petScale
+    // Igual que sprite.css: el bocadillo nunca escala por debajo de 1×.
+    const bubbleScale = Math.max(BUBBLE_SCALE_FLOOR, iconScale)
     return {
-      width: Math.round(BASE_WIDTH * scale),
-      height: Math.round(BASE_HEIGHT * scale)
+      // El ancho lo manda quien sea mayor: el núcleo grande o el bocadillo, que no
+      // encoge con él.
+      width: Math.round(Math.max(ICON_BASE * iconScale, BASE_WIDTH * bubbleScale)),
+      height: Math.round(ICON_BASE * iconScale + BUBBLE_ZONE_H * bubbleScale)
     }
   }
 
@@ -239,11 +265,22 @@ export class PetWindow {
     return found ?? screen.getPrimaryDisplay()
   }
 
-  #boundsFor(workArea: Rectangle, corner: Corner): Rectangle {
+  /**
+   * `workArea` para izquierda/derecha/arriba (no queremos irnos por debajo de la
+   * barra de menús ni fuera de la pantalla en horizontal). `bounds` — la pantalla
+   * física entera, SIN el recorte que macOS hace para el Dock — para abajo: Ismael,
+   * 2026-09-04, quiere la mascota pegada al borde físico de verdad, no solo tocando
+   * el borde superior del Dock (eso fue el primer intento, insuficiente: seguía
+   * "por encima" del Dock en vez de "abajo del todo"). La ventana queda por encima
+   * del Dock en el eje Z gracias a `setAlwaysOnTop(true, 'screen-saver')`, así que
+   * no la tapa aunque ocupe su mismo sitio en pantalla.
+   */
+  #boundsFor(display: Display, corner: Corner): Rectangle {
+    const { workArea, bounds } = display
     const { width, height } = this.#size()
     const right = workArea.x + workArea.width - width - MARGIN
     const left = workArea.x + MARGIN
-    const bottom = workArea.y + workArea.height - height - MARGIN
+    const bottom = bounds.y + bounds.height - height - MARGIN_DOCK_EDGE
     const top = workArea.y + MARGIN
 
     const x = corner === 'top-right' || corner === 'bottom-right' ? right : left

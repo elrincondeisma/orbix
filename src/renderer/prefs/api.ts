@@ -1,5 +1,5 @@
 /**
- * miniClaudio — superficie IPC de la ventana de Preferencias.
+ * Orbix — superficie IPC de la ventana de Preferencias.
  *
  * Espejo en tiempo de compilación de la lista blanca de `src/preload/prefs.ts`.
  *
@@ -19,8 +19,8 @@ import type {
   Prefs
 } from '@shared/types'
 
-function bridge(): NonNullable<Window['miniClaudio']> | null {
-  return window.miniClaudio ?? null
+function bridge(): NonNullable<Window['Orbix']> | null {
+  return window.Orbix ?? null
 }
 
 export function hasBridge(): boolean {
