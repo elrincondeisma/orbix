@@ -1,0 +1,585 @@
+/*
+ * miniClaudio — ventana de Preferencias.
+ * Fuente de verdad: docs/design/04-frontal.md §2, §11 y §12.
+ *
+ * Ancho fijo de 520 px. Cabecera y pestañas fijas; solo el panel hace scroll.
+ */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Cabecera y pestañas                                                 */
+/* ------------------------------------------------------------------ */
+
+.titlebar {
+  flex: none;
+  /* Hueco para los semáforos de macOS con `titleBarStyle: hiddenInset`. */
+  padding: 12px 16px 8px 82px;
+  -webkit-app-region: drag;
+}
+
+.titlebar h1 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#tabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+#tabs button {
+  padding: 7px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--ui-fg-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: default;
+}
+
+#tabs button:hover {
+  color: var(--ui-fg);
+}
+
+#tabs button[aria-selected='true'] {
+  border-bottom-color: var(--ui-accent);
+  color: var(--ui-fg);
+  font-weight: 600;
+}
+
+#banner {
+  flex: none;
+  margin: 0;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: 12px;
+}
+
+#banner[data-tone='warn'] {
+  background: color-mix(in srgb, var(--mc-warn) 18%, transparent);
+}
+#banner[data-tone='ok'] {
+  background: color-mix(in srgb, var(--mc-ok) 18%, transparent);
+}
+#banner[data-tone='info'] {
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+}
+
+#panes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#panes::-webkit-scrollbar {
+  width: 9px;
+}
+#panes::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 5px;
+  background: var(--ui-border);
+  background-clip: content-box;
+}
+
+/* ------------------------------------------------------------------ */
+/* Secciones y filas                                                   */
+/* ------------------------------------------------------------------ */
+
+.pane-section {
+  padding: 14px 16px;
+}
+
+.pane-section + .pane-section {
+  border-top: 1px solid var(--ui-border);
+}
+
+.pane-section h2 {
+  margin: 0 0 10px;
+  color: var(--ui-fg-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  padding: 5px 0;
+}
+
+.row + .row {
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 55%, transparent);
+}
+
+.row-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.row-label label,
+.row-label span {
+  font-size: 13px;
+}
+
+.row.is-disabled .row-label {
+  opacity: 0.55;
+}
+
+.hint {
+  margin: 3px 0 0;
+  color: var(--ui-fg-dim);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.note {
+  margin: 9px 0 0;
+  color: var(--ui-fg-dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.note-warn {
+  color: var(--mc-warn);
+}
+
+.note-ok {
+  color: var(--mc-ok);
+}
+
+/*
+ * Las filas informativas se apilan: llevan rutas y listas de eventos largas, y con
+ * etiqueta a la izquierda el texto de la izquierda se estrujaba a tres líneas.
+ */
+.row-info {
+  display: block;
+  padding: 7px 0;
+}
+
+.row-info .row-label {
+  margin-bottom: 2px;
+}
+
+.row-info .row-label span {
+  color: var(--ui-fg-dim);
+  font-size: 11px;
+}
+
+/* Las rutas y versiones se pueden seleccionar y copiar. */
+.info-value {
+  display: block;
+  color: var(--ui-fg);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.info-value.is-selectable {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+/* ------------------------------------------------------------------ */
+/* Controles                                                           */
+/* ------------------------------------------------------------------ */
+
+.switch {
+  flex: none;
+  appearance: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 11px;
+  background: var(--ui-border);
+  cursor: default;
+  transition: background-color 160ms var(--ease-soft);
+}
+
+.switch::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 2px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
+  transition: transform 160ms var(--ease-out);
+}
+
+.switch:checked {
+  background: var(--ui-accent);
+}
+
+.switch:checked::after {
+  transform: translateX(16px);
+}
+
+.switch:disabled {
+  opacity: 0.45;
+}
+
+.slider-wrap {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  width: 210px;
+}
+
+.slider-wrap input[type='range'] {
+  flex: 1;
+  accent-color: var(--ui-accent);
+}
+
+.slider-value {
+  width: 56px;
+  color: var(--ui-fg-dim);
+  font-size: 12px;
+  text-align: right;
+}
+
+.segmented {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 4px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--ui-fg-dim);
+  font: inherit;
+  font-size: 12px;
+  cursor: default;
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--ui-border);
+}
+
+.segmented button[aria-checked='true'] {
+  background: var(--ui-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+input.text {
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+input.text:disabled {
+  opacity: 0.5;
+}
+
+.btn-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn {
+  padding: 5px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: var(--ui-surface);
+  color: var(--ui-fg);
+  font: inherit;
+  font-size: 12px;
+  cursor: default;
+}
+
+.btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ui-fg) 8%, var(--ui-surface));
+}
+
+.btn:disabled {
+  opacity: 0.5;
+}
+
+.btn-primary {
+  border-color: transparent;
+  background: var(--ui-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, #000 12%, var(--ui-accent));
+}
+
+.btn-danger {
+  color: var(--mc-crit);
+}
+
+/* ------------------------------------------------------------------ */
+/* Selector de esquina                                                 */
+/* ------------------------------------------------------------------ */
+
+.row-corner {
+  align-items: flex-start;
+}
+
+.screen {
+  position: relative;
+  flex: none;
+  width: 148px;
+  height: 96px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ui-fg) 5%, transparent);
+}
+
+.corner {
+  position: absolute;
+  width: 46px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+}
+
+.corner span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px dashed var(--ui-border);
+  border-radius: 4px;
+}
+
+.corner[aria-checked='true'] span {
+  border-style: solid;
+  border-color: transparent;
+  background: var(--ui-accent);
+}
+
+.corner.top-left {
+  top: 4px;
+  left: 4px;
+}
+.corner.top-right {
+  top: 4px;
+  right: 4px;
+}
+.corner.bottom-left {
+  bottom: 4px;
+  left: 4px;
+}
+.corner.bottom-right {
+  bottom: 4px;
+  right: 4px;
+}
+
+.corner.top-right span,
+.corner.bottom-right span {
+  margin-left: auto;
+}
+.corner.bottom-left span,
+.corner.bottom-right span {
+  margin-top: auto;
+}
+.corner {
+  display: flex;
+}
+
+/* ------------------------------------------------------------------ */
+/* Estado de los hooks                                                 */
+/* ------------------------------------------------------------------ */
+
+.hook-state {
+  padding: 11px 13px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: var(--ui-surface);
+}
+
+.hook-headline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hook-headline .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mc-warn);
+}
+
+.hook-state[data-installed='true'] .hook-headline .dot {
+  background: var(--mc-ok);
+}
+
+.hook-sub {
+  margin: 5px 0 0;
+  color: var(--ui-fg-dim);
+  font-size: 12px;
+}
+
+.confirm {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--mc-warn);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mc-warn) 10%, transparent);
+}
+
+.confirm-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.confirm-list {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ui-fg-dim);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.confirm code,
+.confirm-title code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ui-fg) 10%, transparent);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11px;
+}
+
+.result {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ui-fg) 6%, transparent);
+}
+
+.result[data-tone='error'] {
+  background: color-mix(in srgb, var(--mc-crit) 12%, transparent);
+}
+
+.result[data-tone='ok'] {
+  background: color-mix(in srgb, var(--mc-ok) 14%, transparent);
+}
+
+.result-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.result-advice {
+  margin: 5px 0 0;
+  color: var(--ui-fg-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.result-advice:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Tabla de tarifas                                                    */
+/* ------------------------------------------------------------------ */
+
+.table-wrap {
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+table.prices {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+table.prices th {
+  padding: 4px 5px;
+  color: var(--ui-fg-dim);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: right;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+table.prices th:first-child {
+  text-align: left;
+}
+
+table.prices td {
+  padding: 3px 5px;
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
+}
+
+table.prices td.model {
+  width: 34%;
+  min-width: 130px;
+}
+
+table.prices td.model span {
+  display: block;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+table.prices td.model small {
+  color: var(--ui-fg-dim);
+  font-size: 10px;
+}
+
+input.num {
+  width: 100%;
+  min-width: 48px;
+  padding: 4px 5px;
+  text-align: right;
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimiento reducido (§2.3)                                          */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:* http://localhost:*"
+    />
+    <title>Preferencias — miniClaudio</title>
+  </head>
+  <body>
+    <header class="titlebar">
+      <h1>Preferencias</h1>
+    </header>
+    <nav id="tabs" role="tablist" aria-label="Secciones de preferencias"></nav>
+    <p id="banner" hidden></p>
+    <main id="panes"></main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
