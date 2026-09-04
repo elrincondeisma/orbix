@@ -1,0 +1,167 @@
+{
+  "by": "project",
+  "period": "30d",
+  "rows": [
+    {
+      "key": "-Users-icatala-Projects-sl-NuevoGestorDeContenidos",
+      "label": "NuevoGestorDeContenidos",
+      "tokens": {
+        "input": 8814,
+        "output": 3719227,
+        "thinking": 1169601,
+        "cacheWrite5m": 16373894,
+        "cacheWrite1h": 3739468,
+        "cacheRead": 847262215
+      },
+      "totalTokens": 871103618,
+      "costUsd": 627.076671,
+      "requests": 4407,
+      "share": 0.395952
+    },
+    {
+      "key": "-Users-icatala-Projects-propios-Meta-Instagram",
+      "label": "Meta-Instagram",
+      "tokens": {
+        "input": 1446,
+        "output": 578467,
+        "thinking": 165885,
+        "cacheWrite5m": 52404,
+        "cacheWrite1h": 5504017,
+        "cacheRead": 189025928
+      },
+      "totalTokens": 195162262,
+      "costUsd": 164.349564,
+      "requests": 723,
+      "share": 0.103775
+    },
+    {
+      "key": "-Users-icatala-Projects-sl-test-de-agentes",
+      "label": "test-de-agentes",
+      "tokens": {
+        "input": 2724,
+        "output": 1046910,
+        "thinking": 330007,
+        "cacheWrite5m": 3109358,
+        "cacheWrite1h": 191466,
+        "cacheRead": 133070382
+      },
+      "totalTokens": 137420840,
+      "costUsd": 110.666641,
+      "requests": 1019,
+      "share": 0.069878
+    },
+    {
+      "key": "-Users-icatala-Projects-propios-Meta-Instagram-videos-comunidad-remotion",
+      "label": "comunidad-remotion",
+      "tokens": {
+        "input": 692,
+        "output": 325955,
+        "thinking": 96836,
+        "cacheWrite5m": 298670,
+        "cacheWrite1h": 397733,
+        "cacheRead": 142409107
+      },
+      "totalTokens": 143432157,
+      "costUsd": 80.782332,
+      "requests": 346,
+      "share": 0.051008
+    },
+    {
+      "key": "-Users-icatala-Projects-sl-claude-testing-agents",
+      "label": "claude-testing-agents",
+      "tokens": {
+        "input": 712,
+        "output": 306245,
+        "thinking": 82367,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 549144,
+        "cacheRead": 117509663
+      },
+      "totalTokens": 118365764,
+      "costUsd": 71.905957,
+      "requests": 356,
+      "share": 0.045403
+    },
+    {
+      "key": "-Users-icatala-Projects-sl-gestor-de-contenidos-unity",
+      "label": "gestor-de-contenidos-unity",
+      "tokens": {
+        "input": 630,
+        "output": 383312,
+        "thinking": 110750,
+        "cacheWrite5m": 305071,
+        "cacheWrite1h": 561359,
+        "cacheRead": 89159914
+      },
+      "totalTokens": 90410286,
+      "costUsd": 61.686191,
+      "requests": 315,
+      "share": 0.03895
+    },
+    {
+      "key": "-Users-icatala-Projects-sl-sync-v3",
+      "label": "sync-v3",
+      "tokens": {
+        "input": 830,
+        "output": 395419,
+        "thinking": 126747,
+        "cacheWrite5m": 1270529,
+        "cacheWrite1h": 769422,
+        "cacheRead": 110814648
+      },
+      "totalTokens": 113250848,
+      "costUsd": 55.437254,
+      "requests": 415,
+      "share": 0.035005
+    },
+    {
+      "key": "-Users-icatala-Projects-propios-RagERDI",
+      "label": "RagERDI",
+      "tokens": {
+        "input": 540,
+        "output": 334166,
+        "thinking": 91823,
+        "cacheWrite5m": 0,
+        "cacheWrite1h": 659349,
+        "cacheRead": 61048551
+      },
+      "totalTokens": 62042606,
+      "costUsd": 45.474615,
+      "requests": 270,
+      "share": 0.028714
+    },
+    {
+      "key": "-Users-icatala-Projects-sl",
+      "label": "sl",
+      "tokens": {
+        "input": 582,
+        "output": 299556,
+        "thinking": 78858,
+        "cacheWrite5m": 507279,
+        "cacheWrite1h": 1123937,
+        "cacheRead": 33413321
+      },
+      "totalTokens": 35344675,
+      "costUsd": 38.608334,
+      "requests": 291,
+      "share": 0.024378
+    },
+    {
+      "key": "-Users-icatala-Projects-sl-factoria-backend",
+      "label": "factoria-backend",
+      "tokens": {
+        "input": 570,
+        "output": 314809,
+        "thinking": 129319,
+        "cacheWrite5m": 415681,
+        "cacheWrite1h": 718741,
+        "cacheRead": 40815830
+      },
+      "totalTokens": 42265631,
+      "costUsd": 37.759345,
+      "requests": 285,
+      "share": 0.023842
+    }
+  ],
+  "totalCostUsd": 1583.717597
+}

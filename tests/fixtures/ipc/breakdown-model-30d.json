@@ -1,0 +1,55 @@
+{
+  "by": "model",
+  "period": "30d",
+  "rows": [
+    {
+      "key": "claude-opus-5",
+      "label": "Opus 5",
+      "tokens": {
+        "input": 18170,
+        "output": 9286147,
+        "thinking": 2750504,
+        "cacheWrite5m": 21090286,
+        "cacheWrite1h": 17983477,
+        "cacheRead": 1995059526
+      },
+      "totalTokens": 2043437606,
+      "costUsd": 1541.423346,
+      "requests": 9085,
+      "share": 0.973294
+    },
+    {
+      "key": "claude-sonnet-5",
+      "label": "Sonnet 5",
+      "tokens": {
+        "input": 2558,
+        "output": 724128,
+        "thinking": 299181,
+        "cacheWrite5m": 3168199,
+        "cacheWrite1h": 0,
+        "cacheRead": 131382956
+      },
+      "totalTokens": 135277841,
+      "costUsd": 41.443485,
+      "requests": 1279,
+      "share": 0.026168
+    },
+    {
+      "key": "claude-haiku-4-5",
+      "label": "Haiku 4.5",
+      "tokens": {
+        "input": 912,
+        "output": 28997,
+        "thinking": 9090,
+        "cacheWrite5m": 223625,
+        "cacheWrite1h": 0,
+        "cacheRead": 4253386
+      },
+      "totalTokens": 4506920,
+      "costUsd": 0.850767,
+      "requests": 113,
+      "share": 0.000537
+    }
+  ],
+  "totalCostUsd": 1583.717597
+}

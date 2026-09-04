@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-09-03T09:40:00.000Z",
+  "session": {
+    "sessionId": "85415fa7-4d4e-4eef-90aa-b6aa28fb3fc6",
+    "projectKey": "-Users-icatala-Projects-propios-miniClaudio",
+    "projectName": "miniClaudio",
+    "projectPath": "/Users/icatala/Projects/propios/miniClaudio",
+    "startedAt": "2026-09-03T08:45:38.055Z",
+    "lastActivityAt": "2026-09-03T09:28:30.765Z",
+    "isActive": true,
+    "tokens": {
+      "input": 176,
+      "output": 203027,
+      "thinking": 53501,
+      "cacheWrite5m": 303504,
+      "cacheWrite1h": 158239,
+      "cacheRead": 6435729
+    },
+    "totalTokens": 7100675,
+    "costUsd": 11.773709,
+    "requests": 88
+  },
+  "today": {
+    "tokens": {
+      "input": 2556,
+      "output": 1132452,
+      "thinking": 343291,
+      "cacheWrite5m": 6939485,
+      "cacheWrite1h": 2719500,
+      "cacheRead": 276219380
+    },
+    "totalTokens": 287013373,
+    "costUsd": 223.769391,
+    "requests": 1278
+  },
+  "last7d": {
+    "tokens": {
+      "input": 14758,
+      "output": 6763573,
+      "thinking": 2110873,
+      "cacheWrite5m": 21561589,
+      "cacheWrite1h": 8015178,
+      "cacheRead": 1266024912
+    },
+    "totalTokens": 1302380010,
+    "costUsd": 984.066455,
+    "requests": 7036
+  },
+  "last30d": {
+    "tokens": {
+      "input": 21640,
+      "output": 10039272,
+      "thinking": 3058775,
+      "cacheWrite5m": 24482110,
+      "cacheWrite1h": 17983477,
+      "cacheRead": 2130695868
+    },
+    "totalTokens": 2183222367,
+    "costUsd": 1583.717597,
+    "requests": 10477
+  },
+  "monthToDate": {
+    "tokens": {
+      "input": 14398,
+      "output": 6545592,
+      "thinking": 2059689,
+      "cacheWrite5m": 21561589,
+      "cacheWrite1h": 7587519,
+      "cacheRead": 1239282362
+    },
+    "totalTokens": 1274991460,
+    "costUsd": 960.967265,
+    "requests": 6856
+  },
+  "allTime": {
+    "tokens": {
+      "input": 31210,
+      "output": 10480338,
+      "thinking": 3058775,
+      "cacheWrite5m": 25487005,
+      "cacheWrite1h": 18766227,
+      "cacheRead": 2193330921
+    },
+    "totalTokens": 2248095701,
+    "costUsd": 1635.928175,
+    "requests": 10924
+  },
+  "plan": {
+    "tierId": "default_claude_max_20x",
+    "organizationType": "claude_max",
+    "displayName": "Max 20×",
+    "monthlyUsd": 200.0,
+    "accountEmail": "smileandlearndigitalcreations@gmail.com",
+    "detected": true
+  },
+  "multiplier": {
+    "value": 7.918588,
+    "basis": "last30d",
+    "planMonthlyUsd": 200.0,
+    "costUsd": 1583.717597,
+    "isFloor": true,
+    "coveredDays": 8
+  },
+  "ingest": {
+    "state": "idle",
+    "filesTracked": 190,
+    "lastRunAt": "2026-09-03T09:39:57.311Z",
+    "lastDurationMs": 412,
+    "backfillProgress": null,
+    "linesIngestedTotal": 21106,
+    "lastError": null
+  }
+}

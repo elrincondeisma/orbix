@@ -1,0 +1,97 @@
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "disableClaudeAiConnectors": true,
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/ntfy-notify.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/icatala/.local/bin/cerebro hook cierre"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/ntfy-notify.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/ntfy-notify.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/icatala/.local/bin/cerebro hook arranque"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "engram@engram": true,
+    "warp@claude-code-warp": true,
+    "diagram-design@diagram-design": true,
+    "sl-agents@smileandlearn": true
+  },
+  "extraKnownMarketplaces": {
+    "engram": {
+      "source": {
+        "source": "github",
+        "repo": "Gentleman-Programming/engram"
+      }
+    },
+    "smileandlearn": {
+      "source": {
+        "source": "git",
+        "url": "git@bitbucket.org:smileandlearn/claude-agents.git"
+      }
+    }
+  },
+  "language": "Español",
+  "effortLevel": "high",
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "editorMode": "normal",
+  "remoteControlAtStartup": false,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true
+}

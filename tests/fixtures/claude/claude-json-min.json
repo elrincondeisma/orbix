@@ -1,0 +1,107 @@
+{
+  "_comentario": "Recorte anonimizado de ~/.claude.json con la forma REAL verificada el 2026-09-03. fetchedAtMs corresponde al 2026-08-27T06:10:21.099Z: siete días de antigüedad, que es el caso habitual, no el excepcional.",
+  "oauthAccount": {
+    "accountUuid": "00000000-0000-0000-0000-000000000000",
+    "emailAddress": "usuario@ejemplo.com",
+    "organizationUuid": "11111111-1111-1111-1111-111111111111",
+    "hasExtraUsageEnabled": false,
+    "organizationType": "claude_max",
+    "organizationRateLimitTier": "default_claude_max_20x"
+  },
+  "cachedUsageUtilization": {
+    "fetchedAtMs": 1787811021099,
+    "accountUuid": "00000000-0000-0000-0000-000000000000",
+    "utilization": {
+      "five_hour": {
+        "utilization": 0,
+        "resets_at": "2026-08-27T10:00:00.028912+00:00",
+        "limit_dollars": null,
+        "used_dollars": null,
+        "remaining_dollars": null
+      },
+      "seven_day": {
+        "utilization": 63,
+        "resets_at": "2026-08-30T08:00:00.028974+00:00",
+        "limit_dollars": null,
+        "used_dollars": null,
+        "remaining_dollars": null
+      },
+      "seven_day_opus": null,
+      "seven_day_sonnet": null,
+      "tangelo": null,
+      "iguana_necktie": null,
+      "omelette_promotional": null,
+      "nimbus_quill": {
+        "utilization": 0,
+        "resets_at": null,
+        "limit_dollars": null,
+        "used_dollars": null,
+        "remaining_dollars": null
+      },
+      "cinder_cove": null,
+      "amber_ladder": null,
+      "extra_usage": {
+        "is_enabled": false,
+        "monthly_limit": null,
+        "used_credits": null,
+        "utilization": null,
+        "currency": null,
+        "decimal_places": null,
+        "disabled_reason": null,
+        "user_disabled": false,
+        "spend_limit_reached": false
+      },
+      "limits": [
+        {
+          "kind": "session",
+          "group": "session",
+          "percent": 0,
+          "severity": "normal",
+          "resets_at": "2026-08-27T10:00:00.028912+00:00",
+          "scope": null,
+          "is_active": false
+        },
+        {
+          "kind": "weekly_all",
+          "group": "weekly",
+          "percent": 63,
+          "severity": "normal",
+          "resets_at": "2026-08-30T08:00:00.028974+00:00",
+          "scope": null,
+          "is_active": true
+        },
+        {
+          "kind": "weekly_scoped",
+          "group": "weekly",
+          "percent": 3,
+          "severity": "normal",
+          "resets_at": "2026-08-30T08:00:00.029343+00:00",
+          "scope": {
+            "model": {
+              "id": null,
+              "display_name": "Fable"
+            },
+            "surface": null
+          },
+          "is_active": false
+        }
+      ],
+      "spend": {
+        "used": {
+          "amount_minor": 0,
+          "currency": "USD",
+          "exponent": 2
+        },
+        "limit": null,
+        "percent": 0,
+        "severity": "normal",
+        "enabled": false,
+        "disabled_reason": null,
+        "cap": null,
+        "balance": null,
+        "auto_reload": null
+      },
+      "member_dashboard_available": false
+    }
+  }
+}

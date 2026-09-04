@@ -1,0 +1,46 @@
+{
+  "source": "cache",
+  "fetchedAt": "2026-08-27T06:10:21.099Z",
+  "ageSeconds": 617379,
+  "stale": true,
+  "veryStale": true,
+  "bars": [
+    {
+      "kind": "session",
+      "group": "session",
+      "label": "Ventana 5 h",
+      "percent": 0,
+      "severity": "normal",
+      "resetsAt": "2026-08-27T10:00:00.028Z",
+      "scopeLabel": null,
+      "isActive": false
+    },
+    {
+      "kind": "weekly_all",
+      "group": "weekly",
+      "label": "Semanal total",
+      "percent": 63,
+      "severity": "normal",
+      "resetsAt": "2026-08-30T08:00:00.028Z",
+      "scopeLabel": null,
+      "isActive": true
+    },
+    {
+      "kind": "weekly_scoped",
+      "group": "weekly",
+      "label": "Semanal · Fable",
+      "percent": 3,
+      "severity": "normal",
+      "resetsAt": "2026-08-30T08:00:00.029Z",
+      "scopeLabel": "Fable",
+      "isActive": false
+    }
+  ],
+  "extraUsageEnabled": false,
+  "spendUsedUsd": 0.0,
+  "levelB": {
+    "enabled": false,
+    "lastResult": "never",
+    "lastError": null
+  }
+}
