@@ -1,0 +1,92 @@
+/*
+ * miniClaudio — sistema visual compartido por los cuatro renderers.
+ * Fuente de verdad: docs/design/04-frontal.md §2.
+ * No añadir aquí nada específico de una ventana.
+ */
+
+:root {
+  /* Mascota — naranja de la marca Claude */
+  --mc-body: #d97757;
+  --mc-body-light: #e89b7f;
+  --mc-body-dark: #b85c3e;
+  --mc-ink: #1f1b18; /* ojos, cejas, boca */
+  --mc-white: #ffffff; /* brillo de los ojos */
+  --mc-sleep: #7c8aa0; /* tinte frío del estado dormida */
+
+  /* Semántica */
+  --mc-ok: #5a9e6f;
+  --mc-warn: #e8a33d;
+  --mc-crit: #d14d41;
+  --mc-muted: #8a8580;
+
+  /* Bocadillo */
+  --mc-bubble-bg: rgba(26, 24, 22, 0.94);
+  --mc-bubble-fg: #f5f0e8;
+  --mc-bubble-edge: rgba(255, 255, 255, 0.1);
+
+  /* Menubar (tema claro) */
+  --ui-bg: rgba(250, 249, 247, 0.8);
+  --ui-surface: #ffffff;
+  --ui-border: rgba(0, 0, 0, 0.08);
+  --ui-fg: #1f1b18;
+  --ui-fg-dim: #6b6560;
+  --ui-accent: #d97757;
+
+  /* Curvas de movimiento (§2.3) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Tipografía (§2.2) — familia única del sistema, ninguna webfont */
+  --font-ui: -apple-system, 'SF Pro Text', system-ui, sans-serif;
+
+  /* Escala de la mascota; la sobreescribe el renderer con prefs.petScale */
+  --mc-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ui-bg: rgba(30, 29, 27, 0.8);
+    --ui-surface: #262523;
+    --ui-border: rgba(255, 255, 255, 0.1);
+    --ui-fg: #f5f0e8;
+    --ui-fg-dim: #a09a94;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  /* Sin esto los números bailan al refrescarse cada 2 s (§2.2). */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.35;
+}
+
+/* Nada de selección de texto ni menú contextual del navegador: esto no es una web. */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+/* Foco visible y consistente (§12). */
+:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
