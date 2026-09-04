@@ -64,6 +64,11 @@ Guía completa, con capturas de cada pantalla: **[Manual de usuario](docs/manual
 
 Desde **Preferencias → Integración**, desinstala los hooks (deja tu `settings.json` como estaba). Luego arrastra `Orbix.app` a la papelera. Tu histórico en `~/Library/Application Support/Orbix` no se borra solo, por si quieres conservarlo o consultarlo aparte; bórralo a mano si no lo necesitas.
 
+## Actualizar
+
+- **Ya tienes Orbix instalado** y quieres la versión más reciente: `brew upgrade --cask orbix`, o vuelve a descargar el DMG. Detalle en el [manual de actualización](docs/manual/UPDATING.md#1-para-quien-usa-orbix).
+- **Vas a publicar una versión nueva** del proyecto: el proceso completo, paso a paso y probado, está en el [manual de actualización](docs/manual/UPDATING.md#2-para-quien-publica-una-versión-nueva).
+
 ## Licencia
 
 Código disponible para lectura y referencia, todos los derechos reservados — ver [LICENSE](LICENSE). La aplicación compilada es de descarga y uso libre para fines personales por los canales oficiales.
