@@ -1,0 +1,1078 @@
+/*
+ * miniClaudio — núcleo de IA: presentación y animación.
+ * Arte: `resources/pet/`. Geometría medida: ver cabecera de `sprite.ts`.
+ *
+ * REGLA: toda la animación vive aquí, bajo `[data-state]`. `main.ts` solo cambia
+ * el atributo. Junto con `sprite.ts`, es el único sitio que conoce píxeles.
+ *
+ * TRES PALANCAS POR ESTADO, y ninguna se usa sola:
+ *   1. TINTE  — `--t-b/--t-s/--t-h` sobre el PNG, con transición suave entre estados.
+ *   2. RITMO  — `--mc-cycle` (velocidad del ciclo de frames) + pulso/escala del rig.
+ *   3. EXTRA  — un grupo de `#mc-fx` superpuesto, con su propio `color`.
+ *
+ * PRESUPUESTO (§9): solo `transform` y `opacity` en los ciclos; periodos múltiplos
+ * de 33 ms (techo de 30 fps); todo se pausa con `.is-dormant`.
+ */
+
+/*
+ * TINTE — cómo se llegó a esta cadena.
+ *
+ * El primer intento fue `hue-rotate` a secas sobre el PNG. No vale, y el motivo
+ * merece quedar escrito: el arte tiene DOS familias de tono, realces cian y un
+ * cuerpo azul profundo. Al rotar hacia ámbar, el cian va a oro pero el azul va a
+ * VERDE, y el núcleo sale bicolor oro-verde en vez de ámbar. Verificado en
+ * captura sobre `core-peak`, que es el caso peor por ser el más brillante.
+ *
+ * La cadena buena colapsa el tono antes de rotar:
+ *   grayscale() sepia() hue-rotate() saturate() contrast() brightness()
+ * `sepia` deja una sola familia de tono, así que la rotación ya no puede partir
+ * la imagen en dos; `contrast` devuelve la profundidad que el colapso se lleva.
+ *
+ * El colapso SOLO se usa donde el destino está lejos del cian (ámbar, verde,
+ * rojo, violeta). Para índigo, turquesa, blanco y azul apagado basta con mover
+ * un poco el original, que además conserva su riqueza de dos tonos.
+ *
+ * Con `--t-g: 0` y `--t-p: 0` la cadena es la identidad: IDLE se ve tal cual lo
+ * pintó Ismael. Y como las seis funciones están SIEMPRE presentes, el paso de un
+ * estado a otro interpola limpiamente en vez de saltar.
+ *
+ * Registrar las variables con `@property` es lo que permite interpolarlas: sin
+ * registrar son sustitución de texto y el cambio de color sería un corte seco.
+ */
+@property --t-g {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --t-p {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+@property --t-c {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+@property --t-b {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+@property --t-s {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+@property --t-h {
+  syntax: '<angle>';
+  inherits: true;
+  initial-value: 0deg;
+}
+
+/*
+ * El ritmo y la intensidad también se registran, y por el mismo motivo de fondo:
+ * su valor por reposo tiene que venir de `initial-value`, NO de una regla sobre
+ * `#mc-pet`. Un selector de id gana a `[data-state='...']`, así que declarar aquí
+ * el valor base dejaría muertas las doce reglas de estado. (Ya me pasó una vez con
+ * la boca del arte anterior; esta vez estaba camuflado en unas variables.)
+ */
+@property --mc-cycle {
+  syntax: '<time>';
+  inherits: true;
+  initial-value: 561ms; /* 4 frames ≈ 7,1 fps */
+}
+@property --mc-intensity {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ventana y anclaje del contenido (§3.4)                              */
+/* ------------------------------------------------------------------ */
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+/* La ventana es inerte por defecto: los clics la atraviesan (§3.5). */
+body {
+  pointer-events: none;
+}
+
+body.is-interactive #mc-pet {
+  pointer-events: auto;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: calc(2px * var(--mc-scale));
+}
+
+body[data-anchor='bottom-left'] #stage,
+body[data-anchor='top-left'] #stage {
+  align-items: flex-start;
+}
+
+/* Esquinas superiores: la mascota arriba y el bocadillo debajo. */
+body[data-anchor='top-left'] #stage,
+body[data-anchor='top-right'] #stage {
+  flex-direction: column-reverse;
+}
+
+/* ------------------------------------------------------------------ */
+/* Mascota — base                                                      */
+/* ------------------------------------------------------------------ */
+
+#mc-pet {
+  /* Sin valores base aquí: los pone `@property`. Ver el bloque de arriba. */
+  position: relative;
+  flex: none;
+  width: calc(160px * var(--mc-scale));
+  height: calc(160px * var(--mc-scale));
+  opacity: var(--mc-opacity-idle, 0.85);
+  contain: layout paint style;
+  transition:
+    opacity 260ms var(--ease-soft),
+    --t-g 340ms var(--ease-soft),
+    --t-p 340ms var(--ease-soft),
+    --t-h 340ms var(--ease-soft),
+    --t-s 340ms var(--ease-soft),
+    --t-c 340ms var(--ease-soft),
+    --t-b 340ms var(--ease-soft);
+}
+
+/* Capa 1: ciclos infinitos del cuerpo (respiración lenta, temblor). */
+#mc-rig {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* Capa 2: animaciones de una pasada e inclinaciones estáticas. */
+#mc-anim {
+  position: absolute;
+  inset: 0;
+  transition: transform 260ms var(--ease-out);
+}
+
+/* ------------------------------------------------------------------ */
+/* Núcleo: pila de frames + tinte                                      */
+/* ------------------------------------------------------------------ */
+
+#mc-core {
+  position: absolute;
+  inset: 0;
+  filter: grayscale(var(--t-g)) sepia(var(--t-p)) hue-rotate(var(--t-h))
+    saturate(var(--t-s)) contrast(var(--t-c)) brightness(var(--t-b));
+}
+
+.pet-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  /* El arte viene ya remuestreado a 160/320/480; se sirve la escala que toca. */
+  image-rendering: auto;
+  -webkit-user-drag: none;
+}
+
+/*
+ * CICLO DE REPOSO a → b → c → b (ping-pong por energía: sube y baja, así que
+ * respira en vez de saltar). Cuatro animaciones de `opacity` con `step-end`:
+ * corte seco, sin mezcla de dos frames, y compuestas por GPU.
+ */
+#pet-a {
+  animation: mc-fr-a var(--mc-cycle) step-end infinite;
+}
+#pet-b {
+  animation: mc-fr-b var(--mc-cycle) step-end infinite;
+}
+#pet-c {
+  animation: mc-fr-c var(--mc-cycle) step-end infinite;
+}
+
+@keyframes mc-fr-a {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+}
+@keyframes mc-fr-b {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+}
+@keyframes mc-fr-c {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+}
+
+/* `core-peak` no entra en el ciclo de reposo: se reserva para picos de energía. */
+#pet-peak {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Capa de efectos                                                     */
+/* ------------------------------------------------------------------ */
+
+#mc-fx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  will-change: transform;
+  /* Color por defecto de la familia: los azules del arte. */
+  color: #7fd8ff;
+}
+
+/*
+ * El arte no se refleja: tiene la luz pintada y un espejo se nota. Lo que sí mira
+ * hacia el centro de la pantalla es la capa de efectos, que es geometría plana.
+ */
+#mc-pet[data-facing='left'] #mc-fx {
+  transform: scaleX(-1);
+}
+
+#mc-fx > g {
+  opacity: 0;
+  visibility: hidden;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.86);
+  transition:
+    opacity 120ms var(--ease-soft),
+    transform 120ms var(--ease-soft),
+    visibility 0s linear 120ms;
+}
+
+[data-state='needs_you'] #fx-alert,
+[data-state='done'] #fx-sparks,
+[data-state='puzzled'] #fx-loose,
+[data-state='thinking'] #fx-orbit,
+[data-state='sleeping'] #fx-fallen,
+[data-state='coding'] #fx-bits,
+[data-state='running'] #fx-progress,
+[data-state='compacting'] #fx-implode,
+[data-state='waking'] #fx-wave,
+[data-state='subagent_done'] #fx-lap,
+[data-state='worried'] #fx-warn {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    visibility 0s;
+}
+
+/* Familia de trazos: fino, geometría simple, brillo suave. */
+.ring-dashed,
+.ring-progress,
+.ring-warn,
+.orbit-line,
+.arc-broken,
+.sat-ring,
+.bit-cross,
+.jitter,
+.wave {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.spark,
+.settled,
+.dropping,
+.imp,
+.bit,
+.orbit-dot,
+.sat-dot {
+  fill: currentColor;
+}
+
+.tick {
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.ring-dashed {
+  stroke-width: 3;
+  stroke-dasharray: 15 11;
+}
+.ring-progress {
+  stroke-width: 2;
+  stroke-dasharray: 34 96;
+}
+.ring-warn {
+  stroke-width: 2.5;
+  stroke-dasharray: 6 9;
+}
+.orbit-line {
+  stroke-width: 1.4;
+  opacity: 0.75;
+}
+.arc-broken {
+  stroke-width: 2;
+  stroke-dasharray: 9 8;
+  opacity: 0.7;
+}
+.sat-ring {
+  stroke-width: 2;
+}
+.bit-cross {
+  stroke-width: 2;
+}
+.jitter {
+  stroke-width: 2;
+}
+.wave {
+  stroke-width: 2.5;
+}
+
+/* Grupos que giran alrededor del orbe. */
+.spin {
+  transform-box: view-box;
+  transform-origin: 79px 77px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Los doce estados                                                    */
+/* ------------------------------------------------------------------ */
+
+/* IDLE — reposo. Solo el ciclo de frames: es la respiración del núcleo. */
+
+/* WAKING — encendido: destello blanco, estirón y onda de expansión. */
+[data-state='waking'] {
+  --t-g: 0.45;
+  --t-c: 1.05;
+  --t-b: 1.38;
+  --mc-cycle: 330ms;
+}
+[data-state='waking'] #mc-anim {
+  animation: mc-ignite 693ms var(--ease-out) 1;
+}
+[data-state='waking'] #pet-peak {
+  animation: mc-peak-flash 693ms var(--ease-out) 1;
+}
+[data-state='waking'] #mc-fx {
+  color: #cdefff;
+}
+[data-state='waking'] .wave-1 {
+  animation: mc-wave 693ms var(--ease-out) 1;
+}
+[data-state='waking'] .wave-2 {
+  animation: mc-wave 693ms var(--ease-out) 165ms 1;
+}
+
+/* THINKING — cálculo: núcleo blanco, órbita extra girando y latido de energía. */
+[data-state='thinking'] {
+  --t-g: 0.92;
+  --t-c: 1.08;
+  --t-b: 1.12;
+  --mc-cycle: 561ms;
+}
+[data-state='thinking'] #mc-fx {
+  color: #eaf7ff;
+}
+[data-state='thinking'] #fx-orbit .spin {
+  animation: mc-spin 3960ms linear infinite;
+}
+[data-state='thinking'] #pet-peak {
+  animation: mc-peak-breathe 2376ms var(--ease-soft) infinite;
+}
+
+/* CODING — foco: azul más profundo, ciclo rápido y bits en secuencia. */
+[data-state='coding'] {
+  --t-h: 18deg;
+  --t-s: 1.15;
+  --t-c: 1.1;
+  --t-b: 0.95;
+  --mc-cycle: 396ms;
+}
+[data-state='coding'] #mc-fx {
+  color: #8fe3ff;
+}
+[data-state='coding'] .bit-1 {
+  animation: mc-bit 594ms step-end infinite;
+}
+[data-state='coding'] .bit-2 {
+  animation: mc-bit 594ms step-end 198ms infinite;
+}
+[data-state='coding'] .bit-3 {
+  animation: mc-bit 594ms step-end 396ms infinite;
+}
+[data-state='coding'] .bit-cross {
+  animation: mc-bit 594ms step-end 297ms infinite;
+}
+
+/* RUNNING — proceso: turquesa y anillo de progreso girando. */
+[data-state='running'] {
+  --t-h: -34deg;
+  --t-s: 1.15;
+  --t-c: 1.05;
+  --t-b: 1.05;
+  --mc-cycle: 462ms;
+}
+[data-state='running'] #mc-fx {
+  color: #6ff0e0;
+}
+[data-state='running'] #fx-progress .spin {
+  animation: mc-spin 1980ms linear infinite;
+}
+
+/* PUZZLED — error: rojo, ciclo lento, órbita rota y satélite que se descuelga. */
+[data-state='puzzled'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: -45deg;
+  --t-s: 2.8;
+  --t-c: 1.3;
+  --t-b: 1;
+  --mc-cycle: 792ms;
+}
+[data-state='puzzled'] #mc-fx {
+  color: #ff6a5c;
+}
+[data-state='puzzled'] #mc-anim {
+  animation: mc-shake 594ms var(--ease-soft) 2;
+}
+[data-state='puzzled'] .faller {
+  animation: mc-detach 1188ms var(--ease-out) 1 both;
+}
+
+/* SUBAGENT_DONE — verde azulado y un satélite que da una vuelta y se va. */
+[data-state='subagent_done'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: 105deg;
+  --t-s: 2;
+  --t-c: 1.3;
+  --t-b: 0.98;
+  --mc-cycle: 462ms;
+}
+[data-state='subagent_done'] #mc-fx {
+  color: #d8fff0;
+}
+[data-state='subagent_done'] #fx-lap .spin {
+  animation: mc-spin 924ms var(--ease-soft) 1;
+}
+
+/* COMPACTING — memoria: violeta, núcleo comprimido y partículas convergiendo. */
+[data-state='compacting'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: 240deg;
+  --t-s: 2.2;
+  --t-c: 1.3;
+  --t-b: 1.02;
+  --mc-cycle: 693ms;
+}
+[data-state='compacting'] #mc-fx {
+  color: #c79bff;
+}
+[data-state='compacting'] #mc-anim {
+  transform: scale(0.96);
+}
+[data-state='compacting'] #mc-rig {
+  animation: mc-tremor 198ms linear infinite;
+}
+[data-state='compacting'] .imp-1 {
+  animation: mc-implode 1386ms var(--ease-soft) infinite;
+}
+[data-state='compacting'] .imp-2 {
+  animation: mc-implode 1386ms var(--ease-soft) 330ms infinite;
+}
+[data-state='compacting'] .imp-3 {
+  animation: mc-implode 1386ms var(--ease-soft) 660ms infinite;
+}
+[data-state='compacting'] .imp-4 {
+  animation: mc-implode 1386ms var(--ease-soft) 990ms infinite;
+}
+
+/* NEEDS_YOU — ámbar a plena opacidad, salto y aro de alerta girando. ⭐ */
+[data-state='needs_you'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: 4deg;
+  --t-s: 3;
+  --t-c: 1.3;
+  --t-b: 1.06;
+  --mc-cycle: 396ms;
+}
+#mc-pet[data-state='needs_you'],
+#mc-pet[data-state='done'] {
+  opacity: 1;
+}
+[data-state='needs_you'] #mc-fx {
+  color: #ffc247;
+}
+[data-state='needs_you'] #fx-alert .spin {
+  animation: mc-spin 2970ms linear infinite;
+}
+[data-state='needs_you'] #mc-anim {
+  /* Tres saltos seguidos y, después, uno cada 3 s mientras siga pegajoso. */
+  animation:
+    mc-bounce 528ms var(--ease-out) 3,
+    mc-bounce-idle 2970ms var(--ease-out) 1584ms infinite;
+}
+[data-state='needs_you'] #pet-peak {
+  animation: mc-peak-pulse 693ms var(--ease-soft) infinite;
+}
+
+/* DONE — verde a plena opacidad, pico de energía y chispas ascendentes. ⭐ */
+[data-state='done'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: 78deg;
+  --t-s: 2.4;
+  --t-c: 1.3;
+  --t-b: 1.05;
+  --mc-cycle: 396ms;
+}
+[data-state='done'] #mc-fx {
+  color: #d9ffe6;
+}
+[data-state='done'] #mc-anim {
+  animation: mc-pop 429ms var(--ease-out) 1;
+}
+[data-state='done'] #pet-peak {
+  animation: mc-peak-flash 792ms var(--ease-out) 1;
+}
+[data-state='done'] .spark-1 {
+  animation: mc-rise 990ms var(--ease-out) infinite;
+}
+[data-state='done'] .spark-2 {
+  animation: mc-rise 990ms var(--ease-out) 132ms infinite;
+}
+[data-state='done'] .spark-3 {
+  animation: mc-rise 990ms var(--ease-out) 264ms infinite;
+}
+[data-state='done'] .spark-4 {
+  animation: mc-rise 990ms var(--ease-out) 396ms infinite;
+}
+[data-state='done'] .spark-5 {
+  animation: mc-rise 990ms var(--ease-out) 528ms infinite;
+}
+
+/* SLEEPING — azul apagado, ciclo muy lento y partículas posadas en la base. */
+[data-state='sleeping'] {
+  --t-g: 0.45;
+  --t-h: 8deg;
+  --t-s: 0.75;
+  --t-c: 0.95;
+  --t-b: 0.72;
+  --mc-cycle: 1980ms;
+}
+#mc-pet[data-state='sleeping'] {
+  opacity: 0.5;
+}
+[data-state='sleeping'] #mc-fx {
+  color: #a6cbea;
+}
+[data-state='sleeping'] #mc-rig {
+  animation: mc-breathe-deep 5940ms var(--ease-soft) infinite;
+}
+[data-state='sleeping'] .d-1 {
+  animation: mc-fall 2970ms var(--ease-soft) infinite;
+}
+[data-state='sleeping'] .d-2 {
+  animation: mc-fall 2970ms var(--ease-soft) 1485ms infinite;
+}
+
+/* WORRIED — ámbar oscuro, temblor y arco de aviso pulsante. */
+[data-state='worried'] {
+  --t-g: 1;
+  --t-p: 1;
+  --t-h: -18deg;
+  --t-s: 2.7;
+  --t-c: 1.3;
+  --t-b: 0.86;
+  --mc-cycle: 693ms;
+}
+[data-state='worried'] #mc-fx {
+  color: #ff9840;
+}
+[data-state='worried'] #mc-rig {
+  animation: mc-tremor 231ms linear infinite;
+}
+[data-state='worried'] .ring-warn {
+  animation: mc-warn-pulse 1188ms var(--ease-soft) infinite;
+  transform-box: view-box;
+  transform-origin: 79px 77px;
+}
+[data-state='worried'] .j-1,
+[data-state='worried'] .j-2 {
+  animation: mc-jitter 396ms step-end infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Animaciones puntuales — `PetRenderer.play(PetAnim)`                 */
+/* ------------------------------------------------------------------ */
+
+#mc-pet.play-bounce #mc-anim {
+  animation: mc-bounce 528ms var(--ease-out) 1;
+}
+#mc-pet.play-pop #mc-anim {
+  animation: mc-pop 429ms var(--ease-out) 1;
+}
+#mc-pet.play-shake #mc-anim {
+  animation: mc-shake 594ms var(--ease-soft) 1;
+}
+#mc-pet.play-stretch #mc-anim {
+  animation: mc-ignite 693ms var(--ease-out) 1;
+}
+#mc-pet.play-nod #mc-anim {
+  animation: mc-nod 891ms var(--ease-out) 1;
+}
+/* Sin brazos que saludar: el saludo es un satélite dando una vuelta. */
+#mc-pet.play-wave #fx-lap .spin {
+  animation: mc-spin 924ms var(--ease-soft) 1;
+}
+#mc-pet.play-wave #fx-lap {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+}
+/* Sin párpados que cerrar: el «parpadeo» es un destello del núcleo. */
+#mc-pet.play-blink #pet-peak {
+  animation: mc-peak-flash 264ms var(--ease-soft) 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Keyframes — todos sobre transform/opacity                           */
+/* ------------------------------------------------------------------ */
+
+@keyframes mc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mc-breathe-deep {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.965);
+  }
+}
+
+@keyframes mc-tremor {
+  0%,
+  100% {
+    transform: translateX(-0.6px);
+  }
+  50% {
+    transform: translateX(0.6px);
+  }
+}
+
+@keyframes mc-ignite {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.4;
+  }
+  45% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mc-pop {
+  0% {
+    transform: scale(0.88) translateY(0);
+  }
+  55% {
+    transform: scale(1.1) translateY(-8px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes mc-shake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes mc-nod {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-5deg);
+  }
+}
+
+/* Squash & stretch: el núcleo se comprime al despegar y se estira en el aire. */
+@keyframes mc-bounce {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  20% {
+    transform: translateY(calc(-8px * var(--mc-intensity))) scale(0.95, 1.05);
+  }
+  50% {
+    transform: translateY(calc(-18px * var(--mc-intensity))) scale(0.97, 1.03);
+  }
+  85% {
+    transform: translateY(0) scale(1.07, 0.93);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+/* El mismo salto, empaquetado en los primeros 528 ms de un ciclo de 2 970 ms. */
+@keyframes mc-bounce-idle {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  3.6% {
+    transform: translateY(-8px) scale(0.95, 1.05);
+  }
+  8.9% {
+    transform: translateY(-18px) scale(0.97, 1.03);
+  }
+  15.1% {
+    transform: translateY(0) scale(1.07, 0.93);
+  }
+  17.8%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+/* Picos de energía: `core-peak` entrando por encima del ciclo de reposo. */
+@keyframes mc-peak-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mc-peak-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes mc-peak-breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Chispas ascendentes de DONE. */
+@keyframes mc-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(-16px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-62px) scale(0.5);
+  }
+}
+
+/* Partículas que caen y se posan, en SLEEPING. */
+@keyframes mc-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(104px);
+  }
+}
+
+/* Convergencia hacia el centro, en COMPACTING. */
+@keyframes mc-implode {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.06);
+  }
+}
+
+/* El satélite que se descuelga de la órbita, en PUZZLED. */
+@keyframes mc-detach {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(6px, 10px) rotate(20deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(16px, 74px) rotate(70deg);
+  }
+}
+
+/* Onda de encendido, en WAKING. */
+@keyframes mc-wave {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+@keyframes mc-bit {
+  0% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 0.18;
+  }
+}
+
+@keyframes mc-warn-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes mc-jitter {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translate(2px, -2px);
+  }
+}
+
+/* Los grupos de efectos escalan desde su propio centro. */
+.wave,
+.imp,
+.spark,
+.dropping,
+.jitter,
+.faller {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Bocadillo (§7)                                                      */
+/* ------------------------------------------------------------------ */
+
+#mc-bubble {
+  flex: none;
+  position: relative;
+  max-width: calc(280px * var(--mc-scale));
+  min-width: calc(90px * var(--mc-scale));
+  margin: 0 calc(6px * var(--mc-scale));
+  padding: calc(9px * var(--mc-scale)) calc(13px * var(--mc-scale));
+  border: 1px solid var(--mc-bubble-edge);
+  border-radius: calc(14px * var(--mc-scale));
+  background: var(--mc-bubble-bg);
+  backdrop-filter: blur(12px);
+  color: var(--mc-bubble-fg);
+  font-size: calc(13px * var(--mc-scale));
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.96);
+  transition:
+    opacity 180ms var(--ease-soft),
+    transform 180ms var(--ease-soft),
+    visibility 0s linear 180ms;
+}
+
+#mc-bubble.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 200ms var(--ease-out),
+    transform 200ms var(--ease-out),
+    visibility 0s;
+}
+
+#mc-bubble.is-leaving {
+  opacity: 0;
+  transform: translateY(-4px) scale(1);
+}
+
+#mc-bubble .bubble-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* Pico de 10×8 apuntando al núcleo. */
+#mc-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: calc(5px * var(--mc-scale)) solid transparent;
+  border-right: calc(5px * var(--mc-scale)) solid transparent;
+}
+
+body[data-anchor='bottom-right'] #mc-bubble::after,
+body[data-anchor='bottom-left'] #mc-bubble::after {
+  top: 100%;
+  border-top: calc(8px * var(--mc-scale)) solid var(--mc-bubble-bg);
+}
+
+body[data-anchor='top-right'] #mc-bubble::after,
+body[data-anchor='top-left'] #mc-bubble::after {
+  bottom: 100%;
+  border-bottom: calc(8px * var(--mc-scale)) solid var(--mc-bubble-bg);
+}
+
+/* El núcleo mide 160 px y su centro cae a ~79 px del borde del ancla. */
+body[data-anchor='bottom-right'] #mc-bubble::after,
+body[data-anchor='top-right'] #mc-bubble::after {
+  right: calc(73px * var(--mc-scale));
+}
+
+body[data-anchor='bottom-left'] #mc-bubble::after,
+body[data-anchor='top-left'] #mc-bubble::after {
+  left: calc(73px * var(--mc-scale));
+}
+
+/* ------------------------------------------------------------------ */
+/* Dormancia (§9): 60 s sin comandos → 0 % de CPU                      */
+/* ------------------------------------------------------------------ */
+
+#mc-pet.is-dormant,
+#mc-pet.is-dormant * {
+  animation-play-state: paused;
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimiento reducido (§2.3)                                          */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Sin animación cíclica no hay ciclo de frames, así que hay que dejar UNO visible:
+ * si no, el núcleo desaparecería del todo.
+ */
+html.reduced-motion #mc-pet,
+html.reduced-motion #mc-pet * {
+  animation: none !important;
+  transition-duration: 150ms !important;
+}
+
+html.reduced-motion #pet-b {
+  opacity: 1;
+}
+
+html.reduced-motion #mc-bubble {
+  transform: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mc-pet,
+  #mc-pet * {
+    animation: none !important;
+    transition-duration: 150ms !important;
+  }
+
+  #pet-b {
+    opacity: 1;
+  }
+
+  #mc-bubble {
+    transform: none !important;
+  }
+}
