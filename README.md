@@ -35,6 +35,8 @@ Al abrir Orbix por primera vez verás la mascota y el icono en la barra de menú
 
 Guía completa, con capturas de cada pantalla: **[Manual de usuario](docs/manual/MANUAL.md)**.
 
+¿Prefieres que lo instale un agente (Claude Code u otro) en vez de hacerlo tú a mano? **[Instalación con un agente](docs/manual/AGENT_INSTALL.md)** — un prompt listo para copiar y pegar.
+
 ## Privacidad
 
 - Todo vive en tu Mac: una base de datos SQLite local (`~/Library/Application Support/Orbix`) y nada más. Sin servidor, sin telemetría, sin analítica.
