@@ -1,0 +1,45 @@
+{
+  "fuente": "ai_core_sprites.zip (2026-09-03)",
+  "encuadre_origen": [
+    32,
+    20,
+    1232,
+    1220
+  ],
+  "lado_origen": 1200,
+  "escalas": {
+    "1x": 160,
+    "2x": 320,
+    "3x": 480
+  },
+  "frames": {
+    "a": {
+      "origen": "ai_core_sprite_04.png",
+      "brillo": 100.1
+    },
+    "b": {
+      "origen": "ai_core_sprite_01.png",
+      "brillo": 103.6
+    },
+    "c": {
+      "origen": "ai_core_sprite_02.png",
+      "brillo": 111.0
+    },
+    "peak": {
+      "origen": "ai_core_sprite_03.png",
+      "brillo": 118.4
+    }
+  },
+  "ciclo_reposo": {
+    "orden": [
+      "a",
+      "b",
+      "c",
+      "b"
+    ],
+    "fps": 7,
+    "nota": "ping-pong por energia: respira, no salta"
+  },
+  "pico": "peak — reservado para picos de energia (NEEDS_YOU, DONE, THINKING intenso)",
+  "nota_alineacion": "los cuatro originales ya venian alineados (correlacion cruzada: desplazamiento 0). No se recentro nada; solo recorte comun."
+}
