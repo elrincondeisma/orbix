@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws://localhost:* http://localhost:*"
+    />
+    <title>Estadísticas — miniClaudio</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Estadísticas</h1>
+      <div id="periods" class="segmented" role="radiogroup" aria-label="Periodo"></div>
+      <span id="freshness" class="freshness"></span>
+    </header>
+
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <section id="kpis" class="kpis"></section>
+
+    <section class="chart-block">
+      <header class="chart-head">
+        <h2>Consumo por día</h2>
+        <div id="metrics" class="segmented" role="radiogroup" aria-label="Métrica"></div>
+      </header>
+      <div id="chart" class="chart-host"></div>
+    </section>
+
+    <section id="ranks" class="ranks"></section>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
