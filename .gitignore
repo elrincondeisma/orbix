@@ -3,5 +3,6 @@ out/
 dist/
 release/
 *.log
+*.tsbuildinfo
 .DS_Store
 !data/snapshot-*.json

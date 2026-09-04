@@ -6,13 +6,20 @@
   "private": true,
   "type": "module",
   "main": "./out/main/index.js",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "electron-vite dev",
+    "predev": "npm run rebuild:electron",
     "build": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && electron-vite build",
-    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "test": "vitest run",
+    "pretest": "npm run rebuild:node",
     "dist": "npm run build && electron-builder --mac --arm64",
-    "test": "vitest run"
+    "predist": "npm run rebuild:electron",
+    "postinstall": "electron-rebuild -f -w better-sqlite3",
+    "rebuild:node": "npm rebuild better-sqlite3",
+    "rebuild:electron": "electron-rebuild -f -w better-sqlite3"
   },
   "dependencies": {
     "better-sqlite3": "^12.0.0",
