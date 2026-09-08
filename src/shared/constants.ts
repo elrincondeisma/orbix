@@ -259,6 +259,7 @@ export const DEFAULT_PREFS_BASE: Readonly<Omit<Prefs, 'timezone'>> = Object.free
   detailedToolStates: true,
 
   showCostInMenubar: false,
+  showSessionPercentInMenubar: false,
   launchAtLogin: false,
   devMode: false
 })

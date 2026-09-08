@@ -12,6 +12,7 @@ export class GeneralTab {
   readonly element: HTMLElement
 
   readonly #cost
+  readonly #sessionPercent
   readonly #launch
   readonly #launchNote: HTMLElement
   readonly #version = infoRow('Versión')
@@ -31,6 +32,14 @@ export class GeneralTab {
       'Desactivado por defecto: un título que cambia cada pocos segundos ensancha y ' +
         'estrecha la barra y acaba molestando. Se refresca como mucho una vez por minuto.',
       (v) => patch({ showCostInMenubar: v })
+    )
+
+    this.#sessionPercent = switchRow(
+      'Mostrar el % de la ventana de 5 h en la barra de menús',
+      'El límite que aprieta mientras trabajas, no el semanal. Si el dato de ' +
+        'límites lleva más de un día sin refrescarse no se pinta nada: pasa el ratón ' +
+        'por el icono para ver el porcentaje y su antigüedad.',
+      (v) => patch({ showSessionPercentInMenubar: v })
     )
 
     /*
@@ -53,7 +62,13 @@ export class GeneralTab {
     this.element = document.createElement('div')
     this.element.className = 'pane'
     this.element.append(
-      section('Sistema', this.#cost.element, this.#launch.element, this.#launchNote),
+      section(
+        'Sistema',
+        this.#cost.element,
+        this.#sessionPercent.element,
+        this.#launch.element,
+        this.#launchNote
+      ),
       section(
         'Acerca de',
         this.#version.element,
@@ -66,6 +81,7 @@ export class GeneralTab {
 
   render(prefs: Prefs): void {
     this.#cost.set(prefs.showCostInMenubar)
+    this.#sessionPercent.set(prefs.showSessionPercentInMenubar)
     // Si macOS rechazó el cambio, `prefs.launchAtLogin` vuelve en `false` y el
     // interruptor rebota aquí. Es la misma regla que en el resto de la ventana.
     this.#launch.set(prefs.launchAtLogin)

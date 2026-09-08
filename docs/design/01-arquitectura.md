@@ -310,6 +310,7 @@ export interface Prefs {
   detailedToolStates: boolean    // default true → instala PreToolUse/PostToolUse
   // Sistema
   showCostInMenubar: boolean     // default false (ver 04-frontal.md §10.1 y D3)
+  showSessionPercentInMenubar: boolean  // default false (% de la ventana de 5 h, §10.1)
   launchAtLogin: boolean         // default false (F2)
   devMode: boolean               // default false
 }

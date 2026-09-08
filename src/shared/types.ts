@@ -320,6 +320,8 @@ export interface Prefs {
 
   // Sistema
   showCostInMenubar: boolean
+  /** % gastado de la ventana de 5 h junto al icono de la barra de menús. */
+  showSessionPercentInMenubar: boolean
   launchAtLogin: boolean
   devMode: boolean
 }

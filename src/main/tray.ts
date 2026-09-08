@@ -5,8 +5,12 @@
  *
  *  - Imagen PLANTILLA (`trayTemplate.png` + `@2x`): macOS la invierte sola en modo oscuro
  *    y al resaltarla. Se genera con `scripts/gen-tray-icon.mjs`.
- *  - Título opcional a la derecha: el coste de hoy en formato corto, en dígitos
+ *  - Título opcional a la derecha: el coste de hoy en formato corto y/o el % gastado
+ *    de la ventana de 5 h (el límite «de sesión», no el semanal), en dígitos
  *    monoespaciados para que no baile al refrescarse cada 2 s.
+ *  - El % NO se pinta si el dato de límites lleva más de un día sin refrescarse: un
+ *    porcentaje viejo en la barra es indistinguible de uno real (§1.3, nada de
+ *    mentiras). El tooltip cuenta siempre la antigüedad, se pinte o no.
  *  - Con la mascota en `NEEDS_YOU` el título se sustituye por `●`: es la única forma de
  *    enterarse si la mascota está oculta.
  *  - Clic izquierdo abre/cierra el popover; clic derecho abre el menú nativo.
@@ -17,7 +21,7 @@ import { join } from 'node:path'
 
 import { Menu, Tray, app, nativeImage, type Rectangle } from 'electron'
 
-import { formatCostShort } from '@shared/format'
+import { formatAge, formatCostShort } from '@shared/format'
 
 export interface TrayCallbacks {
   onToggle: (bounds: Rectangle) => void
@@ -33,6 +37,13 @@ export interface TrayViewState {
   todayCostUsd: number
   showCost: boolean
   currencySymbol: string
+  /** % gastado de la ventana de 5 h, o null si no hay ninguna lectura de límites. */
+  sessionPercent: number | null
+  showSessionPercent: boolean
+  /** Antigüedad de esa lectura, para el tooltip. */
+  limitsAgeSeconds: number | null
+  /** `LimitsView.veryStale`: más de 24 h. Con esto a true el % no se pinta. */
+  limitsVeryStale: boolean
   /** true → el título pasa a ser el punto de aviso. */
   needsYou: boolean
   petVisible: boolean
@@ -69,6 +80,10 @@ export class AppTray {
     todayCostUsd: 0,
     showCost: false,
     currencySymbol: '$',
+    sessionPercent: null,
+    showSessionPercent: false,
+    limitsAgeSeconds: null,
+    limitsVeryStale: false,
     needsYou: false,
     petVisible: true,
     muted: false
@@ -85,7 +100,6 @@ export class AppTray {
   create(): void {
     if (this.#tray !== null) return
     const tray = new Tray(trayImage())
-    tray.setToolTip('Orbix')
 
     // OJO: no se usa `setContextMenu`, porque en macOS eso haría que el clic izquierdo
     // abriera el menú en vez del popover.
@@ -110,13 +124,38 @@ export class AppTray {
     const tray = this.#tray
     if (tray === null) return
     const s = this.#state
-    // El aviso gana siempre al coste: es lo urgente.
-    const title = s.needsYou
-      ? '●'
-      : s.showCost
-        ? formatCostShort(s.todayCostUsd, s.currencySymbol)
-        : ''
+
+    const parts: string[] = []
+    if (s.showCost) parts.push(formatCostShort(s.todayCostUsd, s.currencySymbol))
+    if (this.#sessionPercentIsShowable()) parts.push(`${Math.round(s.sessionPercent ?? 0)} %`)
+
+    // El aviso gana siempre al resto: es lo urgente.
+    const title = s.needsYou ? '●' : parts.join(' · ')
     tray.setTitle(title, { fontType: 'monospacedDigit' })
+    tray.setToolTip(this.#tooltip())
+  }
+
+  /** Con el dato de límites de hace más de un día, el % se calla en vez de mentir. */
+  #sessionPercentIsShowable(): boolean {
+    const s = this.#state
+    return s.showSessionPercent && s.sessionPercent !== null && !s.limitsVeryStale
+  }
+
+  /**
+   * El tooltip es donde cabe la verdad completa: el porcentaje con su antigüedad, y
+   * el motivo cuando el título se lo calla por viejo.
+   */
+  #tooltip(): string {
+    const s = this.#state
+    if (!s.showSessionPercent) return 'Orbix'
+
+    const age = formatAge(s.limitsAgeSeconds)
+    if (s.sessionPercent === null) return 'Orbix\nVentana de 5 h: aún sin datos'
+
+    const percent = `${Math.round(s.sessionPercent)} %`
+    return s.limitsVeryStale
+      ? `Orbix\nVentana de 5 h: ${percent}, pero el dato es de ${age}`
+      : `Orbix\nVentana de 5 h: ${percent} · ${age}`
   }
 
   #menu(): Menu {

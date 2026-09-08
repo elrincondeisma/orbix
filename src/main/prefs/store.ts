@@ -275,6 +275,10 @@ export function sanitizePrefs(input: unknown, defaults: Prefs = createDefaultPre
     detailedToolStates: bool(o['detailedToolStates'], defaults.detailedToolStates),
 
     showCostInMenubar: bool(o['showCostInMenubar'], defaults.showCostInMenubar),
+    showSessionPercentInMenubar: bool(
+      o['showSessionPercentInMenubar'],
+      defaults.showSessionPercentInMenubar
+    ),
     launchAtLogin: bool(o['launchAtLogin'], defaults.launchAtLogin),
     devMode: bool(o['devMode'], defaults.devMode)
   }

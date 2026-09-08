@@ -238,7 +238,10 @@ async function bootstrap(): Promise<void> {
   // 4. Plan y límites ---------------------------------------------------------
   claude = new ClaudeService({
     db: layer.db,
-    onLimits: (view) => push?.send('limits:updated', view),
+    onLimits: (view) => {
+      push?.send('limits:updated', view)
+      refreshTray()
+    },
     onWeeklyPercent: (percent) => events?.machine.onWeeklyPercent(percent),
     onError: (error) => report('claude', error)
   })
@@ -522,15 +525,24 @@ function onPetCommand(command: PetCommand): void {
   tray?.update({ needsYou: command.state === PetState.NEEDS_YOU })
 }
 
-/** Refresca el título del Tray con el coste de hoy. */
+/** Refresca el título del Tray con el coste de hoy y el % de la ventana de 5 h. */
 function refreshTray(): void {
   if (tray === null || data === null) return
   const prefs = prefsStore.get()
   try {
+    // El límite «de sesión» es la ventana de 5 h; el semanal NO va al Tray, porque el
+    // que aprieta mientras trabajas es este. Sin lectura de límites, `null`: el Tray
+    // se calla en vez de enseñar un 0 % que parecería real.
+    const limits = claude?.limits ?? null
+    const session = limits?.bars.find((bar) => bar.kind === 'session') ?? null
     tray.update({
       todayCostUsd: data.queries.periodStats('today').costUsd,
       showCost: prefs.showCostInMenubar,
       currencySymbol: prefs.currencySymbol,
+      sessionPercent: session?.percent ?? null,
+      showSessionPercent: prefs.showSessionPercentInMenubar,
+      limitsAgeSeconds: limits?.ageSeconds ?? null,
+      limitsVeryStale: limits?.veryStale ?? false,
       petVisible: prefs.petVisible,
       muted: prefs.muteUntil !== null
     })
