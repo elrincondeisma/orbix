@@ -36,7 +36,7 @@ Runbook probado paso a paso publicando la v0.1.0. Sigue el orden: cada paso da p
 ### 2.1 Sube la versión
 
 ```sh
-cd ~/Projects/propios/miniClaudio   # el nombre del directorio sigue siendo el antiguo; el proyecto es Orbix
+cd ~/Projects/propios/Orbix
 npm version 0.2.0 --no-git-tag-version   # actualiza package.json y package-lock.json, sin crear el tag todavía
 ```
 
