@@ -242,6 +242,11 @@ async function bootstrap(): Promise<void> {
     onWeeklyPercent: (percent) => events?.machine.onWeeklyPercent(percent),
     onError: (error) => report('claude', error)
   })
+  // ⚠️ El interruptor del Nivel B vive en `prefs.json`, pero `CliUsage` nace apagado: sin
+  // esta línea solo se encendía al tocar el interruptor en Preferencias, así que tras
+  // cualquier reinicio de la app `refreshLive()` salía por «desactivado» y los límites se
+  // quedaban clavados en el caché de `~/.claude.json` (que puede llevar días sin cambiar).
+  void claude.setLevelBEnabled(prefs.levelBEnabled)
   claude.refresh(false)
 
   // 5. Servidor de eventos ----------------------------------------------------
@@ -417,6 +422,7 @@ function scheduleIngestLoop(): void {
  * nada: `refreshLive()` nunca gasta una petición sin permiso explícito.
  */
 function scheduleLevelBLoop(): void {
+  const wasScheduled = levelBTimer !== null
   if (levelBTimer !== null) clearInterval(levelBTimer)
   levelBTimer = null
 
@@ -426,6 +432,15 @@ function scheduleLevelBLoop(): void {
   levelBTimer = setInterval(() => {
     void claude?.refreshLive().catch((error: unknown) => report('nivel-b', error))
   }, prefs.levelBIntervalMs)
+
+  // Al arrancar con el Nivel B ya activado (o al activarlo) no se espera un intervalo
+  // entero: el dato del Nivel A puede tener días, y esperar 20 minutos a la primera
+  // lectura buena es justo lo que hace parecer que la app no se actualiza. Solo cuando
+  // NO había ciclo antes: cambiar el intervalo —o cualquier otra preferencia, que
+  // también pasa por `applyPrefs`— no debe gastar una petición de la suscripción.
+  if (!wasScheduled) {
+    void claude?.refreshLive().catch((error: unknown) => report('nivel-b', error))
+  }
 }
 
 function schedulePurge(layer: DataLayer): void {

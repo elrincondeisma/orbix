@@ -127,10 +127,20 @@ export class ClaudeService {
       this.cache = read.cache
 
       this.planInfo = buildPlanInfo(read.meta, this.lookupPlan(read.meta.rateLimitTier))
-      this.view = buildLimitsView(read.cache, {
-        levelB: this.levelB.status,
-        metaExtraUsage: read.meta.hasExtraUsageEnabled
-      })
+
+      // ⚠️ El Nivel A NO pisa al Nivel B cuando el suyo es más viejo. Claude Code
+      // reescribe `~/.claude.json` cada pocos minutos, pero `cachedUsageUtilization`
+      // dentro puede llevar DÍAS parado (medido: 98 h el 2026-09-08). Sin esta guarda,
+      // cada escritura del fichero tiraba el porcentaje recién traído por `/usage` y lo
+      // sustituía por el del caché rancio: los límites parecían no actualizarse nunca.
+      const fresher = this.fresherLevelBSnapshot(read.cache)
+      this.view =
+        fresher !== null
+          ? buildLimitsView(fresher, { source: 'live', levelB: this.levelB.status })
+          : buildLimitsView(read.cache, {
+              levelB: this.levelB.status,
+              metaExtraUsage: read.meta.hasExtraUsageEnabled
+            })
 
       this.persistMeta(read.meta)
       this.persistSnapshot('cache', read.cache)
@@ -206,10 +216,13 @@ export class ClaudeService {
       const live = await this.levelB.refresh()
       if (live !== null) {
         this.view = live
-        this.persistSnapshot('live', {
-          fetchedAtMs: live.fetchedAt === null ? null : Date.parse(live.fetchedAt),
-          utilization: this.cache.utilization
-        })
+        this.persistSnapshot(
+          'live',
+          this.levelB.snapshot ?? {
+            fetchedAtMs: live.fetchedAt === null ? null : Date.parse(live.fetchedAt),
+            utilization: this.cache.utilization
+          }
+        )
         this.onLimits(this.view)
         this.onWeeklyPercent(weeklyPercent(this.view))
         return this.view
@@ -220,6 +233,20 @@ export class ClaudeService {
     // Sin Nivel B se reetiqueta la vista con el estado actual y se sigue con el caché.
     this.view = { ...this.view, levelB: this.levelB.status }
     return this.view
+  }
+
+  /**
+   * El snapshot del Nivel B si es más reciente que el del caché que acaba de leerse;
+   * `null` si el caché va por delante (o si aún no hay dato de Nivel B). Se devuelve el
+   * `CachedUsage` crudo, no la vista, para que `buildLimitsView` recalcule
+   * `ageSeconds`/`stale` con la hora de ahora: el frontal pinta esos campos tal cual, y
+   * una vista reutilizada los dejaría congelados en el valor que tuvieran al nacer.
+   */
+  private fresherLevelBSnapshot(cache: CachedUsage): CachedUsage | null {
+    const live = this.levelB.snapshot
+    if (live === null || live.fetchedAtMs === null) return null
+    if (cache.fetchedAtMs !== null && cache.fetchedAtMs >= live.fetchedAtMs) return null
+    return live
   }
 
   /** `levelB:setEnabled`. `verified` solo es true si hay token Y endpoint. */

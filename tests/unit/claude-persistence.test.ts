@@ -359,9 +359,11 @@ describe('ClaudeService', () => {
     // Salida real capturada en la máquina de Ismael el 2026-09-04, ya pasada por
     // `parseUsageOutput` (probado aparte en cli-usage.test.ts) — aquí solo importa que
     // `ClaudeService` recoja el resultado y lo convierta en una `LimitsView` en vivo.
+    // `fetchedAtMs` RELATIVO a ahora, nunca una fecha absoluta: con la de captura fija
+    // el test se volvía rojo solo con que pasaran unos días (la vista salía `stale`).
     const okResult: CliUsageResult = {
       ok: true,
-      fetchedAtMs: Date.parse('2026-09-04T08:34:45.083Z'),
+      fetchedAtMs: Date.now(),
       utilization: {
         limits: [
           {
@@ -410,6 +412,95 @@ describe('ClaudeService', () => {
       .prepare("SELECT COUNT(*) AS n FROM limits_snapshots WHERE source = 'live'")
       .get() as { n: number }
     expect(filas.n).toBeGreaterThan(0)
+
+    await service.stop()
+  })
+
+  it('el Nivel A no pisa al Nivel B cuando su dato es más viejo', async () => {
+    // El caso real que rompía los límites: `~/.claude.json` se reescribe cada pocos
+    // minutos (y con ello se dispara `refresh()`), pero el `cachedUsageUtilization` de
+    // dentro puede llevar días congelado. Antes, cada escritura tiraba el porcentaje
+    // recién traído por `/usage`.
+    const levelB = new CliUsage({
+      isConfigured: () => true,
+      fetchUsage: async () => ({
+        ok: true,
+        fetchedAtMs: Date.now(),
+        utilization: {
+          limits: [
+            {
+              kind: 'session',
+              group: 'session',
+              percent: 50,
+              severity: 'normal',
+              resets_at: null,
+              scope: null,
+              is_active: false
+            },
+            {
+              kind: 'weekly_all',
+              group: 'weekly',
+              percent: 37,
+              severity: 'normal',
+              resets_at: null,
+              scope: null,
+              is_active: true
+            }
+          ]
+        }
+      })
+    })
+    const service = new ClaudeService({ db, home, levelB })
+    service.refresh(false)
+    await service.setLevelBEnabled(true)
+    await service.refreshLive()
+
+    // La fixture trae `weekly_all: 63` con un `fetchedAtMs` de hace semanas.
+    const afterCacheRead = service.refresh(false)
+    expect(afterCacheRead.source).toBe('live')
+    expect(afterCacheRead.bars.map((b) => [b.kind, b.percent])).toEqual([
+      ['session', 50],
+      ['weekly_all', 37]
+    ])
+
+    await service.stop()
+  })
+
+  it("el snapshot 'live' guarda el payload del Nivel B, no el del caché", async () => {
+    const levelB = new CliUsage({
+      isConfigured: () => true,
+      fetchUsage: async () => ({
+        ok: true,
+        fetchedAtMs: Date.now(),
+        utilization: {
+          limits: [
+            {
+              kind: 'weekly_all',
+              group: 'weekly',
+              percent: 37,
+              severity: 'normal',
+              resets_at: null,
+              scope: null,
+              is_active: true
+            }
+          ]
+        }
+      })
+    })
+    const service = new ClaudeService({ db, home, levelB })
+    service.refresh(false)
+    await service.setLevelBEnabled(true)
+    await service.refreshLive()
+
+    const row = db
+      .prepare(
+        "SELECT payload_json, seven_day_pct FROM limits_snapshots WHERE source = 'live' ORDER BY id DESC LIMIT 1"
+      )
+      .get() as { payload_json: string; seven_day_pct: number | null }
+
+    const payload = JSON.parse(row.payload_json) as { limits: { percent: number }[] }
+    expect(payload.limits[0]?.percent).toBe(37)
+    expect(row.seven_day_pct).toBe(37)
 
     await service.stop()
   })

@@ -291,6 +291,15 @@ export class CliUsage {
   private lastError: string | null = null
   private lastFailureAt: number | null = null
 
+  /**
+   * Último `utilization` obtenido de verdad por `/usage`, con su instante. Lo necesita
+   * `ClaudeService` para persistir en `limits_snapshots` el payload DEL NIVEL B: antes
+   * guardaba el del Nivel A con la etiqueta `live` y la fecha del Nivel B, es decir, un
+   * dato rancio disfrazado de fresco justo en la tabla que sirve para rescatar el
+   * arranque.
+   */
+  private lastSnapshot: CachedUsage | null = null
+
   private readonly fetchUsage: () => Promise<CliUsageResult>
   private readonly checkConfigured: () => boolean
   private readonly now: () => number
@@ -303,6 +312,11 @@ export class CliUsage {
 
   get status(): LevelBStatus {
     return { enabled: this.enabled, lastResult: this.lastResult, lastError: this.lastError }
+  }
+
+  /** `null` mientras no haya habido ni un refresco con éxito. */
+  get snapshot(): CachedUsage | null {
+    return this.lastSnapshot
   }
 
   /** Si el binario de `claude` (o el sustituto inyectado en tests) se pudo localizar. */
@@ -349,6 +363,7 @@ export class CliUsage {
       fetchedAtMs: result.fetchedAtMs,
       utilization: result.utilization
     }
+    this.lastSnapshot = cache
     return buildLimitsView(cache, {
       source: 'live',
       levelB: options.levelB ?? this.status
