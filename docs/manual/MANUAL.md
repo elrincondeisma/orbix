@@ -138,6 +138,8 @@ Más abajo en esta misma pestaña, un interruptor **"Refrescar los límites por 
 
 **Cada ejecución consume una petición real de tu suscripción.** Por eso es opcional, y por eso el intervalo mínimo es de un minuto: actívalo solo si de verdad quieres el dato siempre fresco y no te importa ese coste pequeño y predecible.
 
+Ese sondeo se lanza acotado a propósito: en un directorio de trabajo propio y vacío (dentro de `~/Library/Application Support/Orbix`) y sin cargar ninguno de tus servidores MCP. Hasta la 0.1.2 heredaba el directorio de la app — la raíz del disco — y arrancaba ahí una sesión completa de Claude Code con tus MCP; macOS atribuía a Orbix los permisos que pidiera esa sesión, y podías ver a Orbix pidiendo acceso a la fototeca o a otras carpetas protegidas sin tener nada que ver con ellas. Si te salió ese aviso y lo denegaste, no hace falta que cambies nada: Orbix nunca ha necesitado ese permiso.
+
 ### 5.5 General
 
 ![Preferencias, pestaña General](img/prefs-general.png)

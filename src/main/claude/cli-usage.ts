@@ -19,6 +19,17 @@
  * intervalo mínimo de 1 minuto (`PREFS_LIMITS.levelBIntervalMs`), 20 minutos por
  * defecto — decisión explícita de Ismael, no un valor inventado.
  *
+ * OJO con CÓMO se lanza (arreglado en 0.1.3). `execFile` hereda el directorio de
+ * trabajo del padre, y una app de macOS abierta desde el Dock o al iniciar sesión
+ * tiene `cwd = /`: cada sondeo arrancaba una sesión de Claude Code plantada en la
+ * RAÍZ DEL DISCO, con los hooks y los servidores MCP del usuario. Como el proceso
+ * era hijo de Orbix.app, macOS le atribuía a Orbix los permisos que pedía esa
+ * sesión — de ahí el «Orbix quiere acceder a tu fototeca» que reportó Ismael el
+ * 2026-09-08. Por eso ahora el sondeo va con `cwd` propio y vacío y con
+ * `--strict-mcp-config`. Nada de esto es cosmético: sin ello Orbix carga con
+ * permisos que no son suyos y ensucia `~/.claude/projects` con una sesión cada
+ * `levelBIntervalMs`.
+ *
  * Frágil por diseño: se interpreta texto para humanos, no JSON. Si Anthropic cambia
  * la redacción de `/usage`, `parseUsageOutput` puede dejar de reconocer las líneas y
  * `refresh()` fallará con `BAD_OUTPUT` — degradación silenciosa al Nivel A, igual que
@@ -26,8 +37,8 @@
  */
 
 import { execFile } from 'node:child_process'
-import { accessSync, constants as fsConstants } from 'node:fs'
-import { homedir } from 'node:os'
+import { accessSync, constants as fsConstants, mkdirSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -57,6 +68,31 @@ function candidatePaths(): readonly string[] {
     join(home, '.claude/local/claude'),
     join(home, '.npm-global/bin/claude')
   ]
+}
+
+/**
+ * Argumentos del sondeo. `--strict-mcp-config` sin `--mcp-config` deja la sesión SIN
+ * ningún servidor MCP: los del usuario no pintan nada aquí y arrancarlos cada
+ * `levelBIntervalMs` es trabajo y superficie de permisos regalados.
+ *
+ * `--bare` haría más (también se saltaría los hooks), pero exige `ANTHROPIC_API_KEY`
+ * y rompería la autenticación por suscripción, que es justo lo que se va a consultar.
+ */
+export const USAGE_ARGS: readonly string[] = ['--strict-mcp-config', '-p', '/usage']
+
+/**
+ * Directorio de trabajo del sondeo: propio, vacío y nuestro. NUNCA se hereda el del
+ * padre (ver la cabecera del fichero). Si no se puede crear, `tmpdir()` — cualquier
+ * cosa antes que `/` o el home del usuario.
+ */
+export function levelBWorkdir(home: string = homedir()): string {
+  const dir = join(home, 'Library', 'Application Support', 'Orbix', 'levelb')
+  try {
+    mkdirSync(dir, { recursive: true })
+    return dir
+  } catch {
+    return tmpdir()
+  }
 }
 
 /** Memoizado: resolver rutas de fichero en cada llamada sería trabajo de sobra. */
@@ -239,7 +275,8 @@ export async function fetchCliUsage(): Promise<CliUsageResult> {
 
   let stdout: string
   try {
-    const result = await execFileAsync(bin, ['-p', '/usage'], {
+    const result = await execFileAsync(bin, USAGE_ARGS as string[], {
+      cwd: levelBWorkdir(),
       timeout: USAGE_TIMEOUT_MS,
       maxBuffer: MAX_BUFFER_BYTES
     })

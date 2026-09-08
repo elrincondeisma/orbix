@@ -8,9 +8,19 @@
  * proceso de verdad: `CliUsage` siempre recibe `fetchUsage`/`isConfigured` inyectados.
  */
 
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
-import { CliUsage, parseUsageOutput, type CliUsageResult } from '../../src/main/claude/cli-usage'
+import {
+  CliUsage,
+  USAGE_ARGS,
+  levelBWorkdir,
+  parseUsageOutput,
+  type CliUsageResult
+} from '../../src/main/claude/cli-usage'
 
 // Salida literal de `claude -p "/usage"`, 2026-09-04 08:36 UTC. El `cachedUsageUtilization`
 // crudo de ese mismo instante decía: session 38 % / resets 2026-09-04T10:20:00Z,
@@ -205,5 +215,44 @@ describe('CliUsage', () => {
     const view = await cli.refresh()
     expect(view).toBeNull()
     expect(called).toBe(false)
+  })
+})
+
+/**
+ * El sondeo del Nivel B lanza Claude Code de verdad. CÓMO lo lanza no es un detalle:
+ * heredando el `cwd` del padre (que en una app de macOS abierta desde el Dock es `/`)
+ * arrancaba una sesión completa en la raíz del disco, con los MCP del usuario, y macOS
+ * le atribuía a Orbix los permisos que pedía esa sesión.
+ */
+describe('cómo se lanza el sondeo', () => {
+  it('no arranca ningún servidor MCP del usuario', () => {
+    expect(USAGE_ARGS).toContain('--strict-mcp-config')
+    // Sin un `--mcp-config` que lo acompañe, ese flag deja la sesión sin MCP alguno.
+    expect(USAGE_ARGS).not.toContain('--mcp-config')
+  })
+
+  it('sigue pidiendo /usage en modo no interactivo', () => {
+    expect(USAGE_ARGS).toContain('-p')
+    expect(USAGE_ARGS).toContain('/usage')
+  })
+
+  it('el directorio de trabajo es propio, vacío y creado si no existe', () => {
+    const home = mkdtempSync(join(tmpdir(), 'orbix-home-'))
+    try {
+      const dir = levelBWorkdir(home)
+      expect(dir).toBe(join(home, 'Library', 'Application Support', 'Orbix', 'levelb'))
+      expect(existsSync(dir)).toBe(true)
+      expect(readdirSync(dir)).toEqual([])
+    } finally {
+      rmSync(home, { recursive: true, force: true })
+    }
+  })
+
+  it('si no puede crearlo cae en tmp, nunca en la raíz ni en el home', () => {
+    // `/dev/null` no es un directorio: `mkdirSync` no puede colgar nada de ahí.
+    const dir = levelBWorkdir('/dev/null')
+    expect(dir).toBe(tmpdir())
+    expect(dir).not.toBe('/')
+    expect(dir).not.toBe('/dev/null')
   })
 })
