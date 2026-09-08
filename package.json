@@ -1,7 +1,7 @@
 {
   "name": "orbix",
   "productName": "Orbix",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Mascota de escritorio que vigila Claude Code y lleva las cuentas",
   "private": true,
   "type": "module",
