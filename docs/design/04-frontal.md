@@ -534,9 +534,20 @@ y el `main` por debajo del 0,5 % (el ingestor despierta cada 3 s a hacer `stat`)
   desactivado por defecto): el coste de hoy en formato corto, `$56` (sin decimales, sin
   separadores). Con `font-variant-numeric: tabular-nums` no aplica aquí; se usa
   `tray.setTitle(text, { fontType: 'monospacedDigit' })` para que no baile.
+- Segundo dato opcional (`prefs` → "Mostrar el % de la ventana de 5 h en la barra de
+  menús", desactivado por defecto): el porcentaje gastado del límite **de sesión**
+  (`LimitBar.kind === 'session'`), redondeado, `43 %`. El semanal NO va al Tray: el que
+  aprieta mientras trabajas es la ventana de 5 h. Con el coste activado a la vez, ambos se
+  separan con ` · `: `$56 · 43 %`.
+- **El % se calla si el dato es viejo.** Con `LimitsView.veryStale` (más de 24 h sin
+  refrescarse) el porcentaje desaparece del título en vez de mentir: en la barra no cabe la
+  antigüedad, y un `43 %` de hace tres días es indistinguible de uno real (§1.3).
+- **Tooltip:** siempre cuenta la verdad completa cuando el % está activado —
+  `Ventana de 5 h: 43 % · hace 12 min`, o `…, pero el dato es de hace 3 días` cuando el
+  título se lo ha callado. Sin el % activado, el tooltip es solo `Orbix`.
 - **Estado en el icono:** cuando la mascota está en `NEEDS_YOU`, el título se sustituye por
   `●` en el color de acento durante todo el tiempo que dure el estado pegajoso. Es la única
-  forma de enterarse si la mascota está oculta.
+  forma de enterarse si la mascota está oculta. El aviso gana al coste y al porcentaje.
 - Clic izquierdo → abre/cierra el popover. Clic derecho → menú nativo (Estadísticas,
   Preferencias, Silenciar, Ocultar mascota, Salir).
 
@@ -563,8 +574,10 @@ con `blur`, con `Escape` y con un segundo clic en el icono.
 │  $56,21      $214,60      $402,15          │  ← 17px, tabular
 │  183 M tok   782 M tok    1.568 M tok      │  ← 11px dim
 ├────────────────────────────────────────────┤
-│  6,1×  de tu plan Max 20×                  │  ← 28px acento + 12px
-│  $402,15 en 30 días · $200/mes  (suelo)    │  ← 11px dim
+│  6,1×  lo que pagas por tu plan            │  ← 28px acento + 12px
+│  $402,15 en tarifas de API en 30 días ·    │  ← 11px dim
+│  tu plan Max 20× cuesta $200/mes           │
+│  Como mínimo: solo llevamos 12 días…       │  ← 11px dim cursiva (suelo)
 ├────────────────────────────────────────────┤
 │  LÍMITES        actualizado hace 7 días ⚠  │
 │  Ventana 5 h    ▓░░░░░░░░░░   0 %          │

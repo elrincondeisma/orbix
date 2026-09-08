@@ -18,7 +18,7 @@ Una mascota de escritorio para macOS que reacciona en tiempo real a lo que hace 
 ## Qué hace
 
 - **Avisa** — un núcleo de energía en una esquina de tu pantalla cambia de tinte y ritmo según lo que Claude Code está haciendo (pensando, escribiendo código, ejecutando comandos, esperando tu respuesta) y te lo cuenta en un bocadillo.
-- **Cuenta** — un menubar con los tokens consumidos y el coste equivalente a tarifas de API, de la sesión, hoy, 7 días y 30 días, más el multiplicador contra el precio de tu plan.
+- **Cuenta** — un menubar con los tokens consumidos y el coste equivalente a tarifas de API, de la sesión, hoy, 7 días y 30 días, más cuánto te rinde lo que pagas por tu plan (tu gasto equivalente en API frente a la cuota mensual).
 - **Vigila los límites** — barras de uso de tu ventana de 5 horas y tu semana, con la antigüedad del dato siempre visible: nunca se presenta un porcentaje viejo como si fuera actual.
 
 Todo el procesamiento ocurre **en tu máquina**. Ver [Privacidad](#privacidad) más abajo.

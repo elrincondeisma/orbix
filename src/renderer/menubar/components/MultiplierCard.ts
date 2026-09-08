@@ -1,6 +1,10 @@
 /**
- * Orbix — bloque del multiplicador («6,1× de tu plan Max 20×»).
+ * Orbix — bloque del multiplicador («6,1× lo que pagas por tu plan»).
  * Fuente de verdad: docs/design/04-frontal.md §10.3 y §10.6.
+ *
+ * El copy evita comparar el multiplicador con el «20×» del nombre del plan: son
+ * cosas distintas y juntas confunden. Aquí el número solo responde a «¿cuánto me
+ * rinde lo que pago?» — coste equivalente a tarifas de API frente a la cuota.
  *
  * Nada de mentiras (§1.3): un multiplicador calculado con menos de 30 días de
  * histórico se marca como suelo, con el número de días cubiertos a la vista.
@@ -58,11 +62,14 @@ export class MultiplierCard {
     }
 
     setText(this.#value, formatMultiplier(multiplier.value))
-    setText(this.#label, `de tu plan ${plan.displayName}`)
+    setText(this.#label, 'lo que pagas por tu plan')
 
     const spent = formatCost(multiplier.costUsd, currencySymbol)
     const monthly = formatCost(multiplier.planMonthlyUsd, currencySymbol)
-    setText(this.#basis, `${spent} en 30 días · ${monthly}/mes`)
+    setText(
+      this.#basis,
+      `${spent} en tarifas de API en 30 días · tu plan ${plan.displayName} cuesta ${monthly}/mes`
+    )
 
     // Con menos de 30 días de histórico el multiplicador es un SUELO, y eso se
     // dice en su propia línea en vez de esconderse al final de la anterior.
@@ -70,7 +77,7 @@ export class MultiplierCard {
     if (multiplier.isFloor) {
       setText(
         this.#floor,
-        `Es un suelo: solo hay ${multiplier.coveredDays} días de histórico, no 30.`
+        `Como mínimo: solo llevamos ${multiplier.coveredDays} días midiendo, no 30.`
       )
     }
     this.element.classList.toggle('is-floor', multiplier.isFloor)

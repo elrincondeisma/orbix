@@ -122,12 +122,14 @@ function renderKpis(s: StatsSnapshot): void {
     { label: 'Coste', value: formatCost(p.costUsd, symbol), sub: PERIODS.find((x) => x.key === period)?.label ?? '' },
     { label: 'Tokens', value: formatTokens(p.totalTokens), sub: pluralize(p.requests, 'petición', 'peticiones') },
     {
-      label: 'Multiplicador',
+      // «Retorno del plan», no «multiplicador»: el número dice cuánto rinde lo
+      // que pagas, y así no se confunde con el «20×» del nombre del plan.
+      label: 'Retorno del plan',
       value: formatMultiplier(m.value),
       // Nada de mentiras: con menos de 30 días esto es un suelo, y se dice.
       sub: m.isFloor
-        ? `suelo · ${pluralize(m.coveredDays, 'día', 'días')} de datos`
-        : `sobre ${formatCost(m.planMonthlyUsd ?? 0, symbol)}/mes`,
+        ? `mínimo · solo ${pluralize(m.coveredDays, 'día', 'días')} de datos`
+        : `${formatCost(m.costUsd, symbol)} en API vs ${formatCost(m.planMonthlyUsd ?? 0, symbol)}/mes`,
       floor: m.isFloor
     },
     { label: 'Plan', value: s.plan.displayName, sub: s.plan.detected ? 'detectado' : 'no reconocido' }
@@ -142,6 +144,17 @@ function renderKpis(s: StatsSnapshot): void {
         `<p class="kpi-sub">${c.sub}</p></div>`
     )
     .join('')
+
+  // La explicación larga del retorno, al pasar el ratón: se pone por DOM para no
+  // tener que escapar nada dentro del `innerHTML` de arriba.
+  const spent = formatCost(m.costUsd, symbol)
+  const monthly = formatCost(m.planMonthlyUsd ?? 0, symbol)
+  kpis.children[2]?.setAttribute(
+    'title',
+    `En 30 días has consumido ${spent} de lo que costarían esos mismos tokens ` +
+      `pagando la API por uso. Tu plan cuesta ${monthly}/mes, así que te rinde ` +
+      `${formatMultiplier(m.value)} lo que pagas.`
+  )
 }
 
 function renderFreshness(s: StatsSnapshot): void {

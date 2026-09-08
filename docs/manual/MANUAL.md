@@ -72,7 +72,20 @@ Haz clic en el icono de la barra de menús para abrir el resumen.
 
 El bloque de arriba muestra la sesión de Claude Code más reciente que sigue activa: su coste equivalente a tarifas de API, los tokens totales, y el proyecto. Debajo, el mismo coste agregado para hoy, los últimos 7 días y los últimos 30. La etiqueta de tu plan (aquí, **Max 20×**) aparece siempre arriba a la derecha.
 
-### 4.2 Límites de la suscripción
+### 4.2 Retorno de tu plan
+
+Debajo de los periodos hay un número grande con una «×»: **cuánto te rinde lo que pagas**.
+
+Se calcula así: lo que te habrían costado tus últimos 30 días de uso **pagando la API por consumo**, dividido entre lo que pagas al mes por tu suscripción. Un `15×` significa que has consumido el equivalente a 3.000 $ de API con un plan de 200 $/mes.
+
+Dos avisos para no confundirse:
+
+- **No tiene nada que ver con el «20×» del nombre del plan Max 20×.** Ese 20× es solo el nombre comercial (20 veces el uso del plan Pro), no un tope. Tu retorno puede ser 3×, 15× o 40×.
+- **El coste en API es equivalente, no real.** Con la suscripción pagas la cuota fija pase lo que pase; ese número es lo que te habrías dejado haciendo lo mismo por la API.
+
+Si llevas menos de 30 días con Orbix instalado verás la línea *«Como mínimo: solo llevamos N días midiendo, no 30»*: el divisor es un mes completo pero los datos aún no, así que el retorno real es mayor que el que ves.
+
+### 4.3 Límites de la suscripción
 
 ![Barras de límites](img/menubar-limites.png)
 
@@ -130,6 +143,7 @@ Más abajo en esta misma pestaña, un interruptor **"Refrescar los límites por 
 ![Preferencias, pestaña General](img/prefs-general.png)
 
 - **Mostrar el coste en la barra de menús** — un contador junto al icono, si lo prefieres visible sin necesidad de abrir el popover.
+- **Mostrar el % de la ventana de 5 h en la barra de menús** — el porcentaje que llevas gastado del límite que aprieta mientras trabajas (no el semanal). Con las dos opciones activadas, junto al icono verás `$56 · 43 %`. Si el dato de límites lleva más de un día sin refrescarse el porcentaje desaparece en vez de mentirte: pasa el ratón por encima del icono para verlo con su antigüedad.
 - **Abrir al iniciar sesión** — para que la mascota aparezca sola al encender el Mac y no se salte ningún día de contabilidad.
 - **Acerca de** — versión de Orbix, de Electron y de Node, y un botón para copiar un diagnóstico si algún día necesitas reportar un problema.
 
@@ -139,7 +153,7 @@ Más abajo en esta misma pestaña, un interruptor **"Refrescar los límites por 
 
 ![Panel de Estadísticas](img/estadisticas.png)
 
-Accesible desde el menubar, con más detalle que el popover: coste y tokens por periodo (hoy, 7 días, 30 días, este mes, todo), el multiplicador contra el precio de tu plan, una gráfica diaria, y el desglose completo por proyecto y por modelo.
+Accesible desde el menubar, con más detalle que el popover: coste y tokens por periodo (hoy, 7 días, 30 días, este mes, todo), el retorno de tu plan (ver [§4.2](#42-retorno-de-tu-plan)), una gráfica diaria, y el desglose completo por proyecto y por modelo.
 
 Cuando tu histórico cubre menos de 30 días —lo normal nada más instalar, porque Claude Code borra sus propios transcripts pasado ese plazo— el multiplicador se marca como **suelo**: la cifra real solo puede ser igual o mayor, nunca menor.
 
